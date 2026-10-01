@@ -2,6 +2,7 @@
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
+import { quizLines } from './quiz.js'
 
 export const DailySchema = z.object({
   insight: z.object({
@@ -25,18 +26,20 @@ Chaque jour, tu écris pour un utilisateur :
 
 Ton : professionnel, sobre, encourageant, sans mysticisme excessif ni promesses. Tutoiement interdit, utilise « vous ».
 Les tâches sont concrètes, utiles pour le travail ou l'équilibre personnel, faisables en moins de deux heures chacune, et variées (par exemple : une tâche de concentration, une tâche relationnelle, une tâche de recul ou de soin).
+Si le profil précise ses priorités du moment, la période traversée ou son temps disponible, oriente l'horoscope et les tâches en conséquence, et dimensionne les tâches selon le temps disponible.
 N'invente pas d'aspects planétaires précis au degré près ; reste dans des formulations astrologiques générales.
 Écris en français.`
 
 let client = null
 
-export async function generateDaily({ model, firstName, sign, birthTime, dateLabel, moonPhase, dayStatus }) {
+export async function generateDaily({ model, firstName, sign, birthTime, quiz, dateLabel, moonPhase, dayStatus }) {
   client ??= new OpenAI() // lit OPENAI_API_KEY (secret Firebase)
 
   const profile = [
     `Prénom : ${firstName}`,
     `Signe solaire : ${sign}`,
     birthTime ? `Heure de naissance : ${birthTime}` : 'Heure de naissance inconnue',
+    ...quizLines(quiz),
     `Date du jour : ${dateLabel}`,
     `Phase lunaire : ${moonPhase}`,
     `Climat du jour dans le calendrier de manifestation : ${dayStatus}`,

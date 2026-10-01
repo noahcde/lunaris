@@ -122,6 +122,7 @@ export const getDaily = onCall(
         firstName: user.firstName,
         sign: sunSign(user.birthDate),
         birthTime: user.birthTimeUnknown ? null : user.birthTime,
+        quiz: user.quiz,
         ...dayContext(date),
       })
       const result = { ...daily, date, generatedAt: FieldValue.serverTimestamp() }

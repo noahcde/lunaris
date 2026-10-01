@@ -4,11 +4,14 @@ import Paywall from './components/Paywall'
 import ProfileSheet from './components/ProfileSheet'
 import Home from './pages/Home'
 import CalendarPage from './pages/CalendarPage'
+import Landing from './pages/Landing'
 import Login from './pages/Login'
+import Quiz from './pages/Quiz'
 import Onboarding from './pages/Onboarding'
 import { addDays } from './lib/astro'
 import { bestStreak, currentStreak, dayKey } from './lib/streak'
 import { getBackend } from './lib/backend'
+import { loadQuiz, saveQuiz } from './lib/quiz'
 
 const PAGES = ['accueil', 'calendrier']
 
@@ -44,6 +47,8 @@ export default function App() {
   const [user, setUser] = useState(undefined) // undefined = en cours, null = déconnecté
   const [data, setData] = useState(null) // document du compte : profil, série, tâches du jour
   const [editingProfile, setEditingProfile] = useState(false)
+  const [entry, setEntry] = useState('landing') // avant connexion : landing | quiz | login
+  const [quiz, setQuiz] = useState(loadQuiz) // réponses du questionnaire, en attente de connexion
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const [page, setPage] = useState(pageFromHash)
@@ -175,10 +180,24 @@ export default function App() {
     navigate('calendrier')
   }
 
+  // Le questionnaire rempli avant la connexion est enregistré sur le compte avec le profil.
   const saveProfile = async (profile) => {
-    await backend.saveUserData(user.uid, profile)
-    setData((prev) => ({ ...prev, ...profile }))
+    const { birthDate: _birthDate, ...answers } = quiz ?? {}
+    const full = quiz && !data.quiz ? { ...profile, quiz: answers } : profile
+    await backend.saveUserData(user.uid, full)
+    setData((prev) => ({ ...prev, ...full }))
     setEditingProfile(false)
+    if (quiz) {
+      saveQuiz(null)
+      setQuiz(null)
+    }
+  }
+
+  const completeQuiz = (answers) => {
+    saveQuiz(answers)
+    setQuiz(answers)
+    setEntry('login')
+    window.scrollTo({ top: 0 })
   }
 
   // Paiement : redirection vers Stripe. Dans la démo, l'essai démarre directement (pas d'adresse renvoyée).
@@ -219,12 +238,29 @@ export default function App() {
   )
 
   if (!backend || user === undefined || (user && !data)) return shell(<Splash />)
-  if (!user) return shell(<Login onSignIn={backend.signInWithGoogle} demo={backend.mode === 'demo'} />)
+  if (!user) {
+    const demo = backend.mode === 'demo'
+    if (entry === 'quiz') return shell(<Quiz initial={quiz} onBack={() => setEntry('landing')} onComplete={completeQuiz} />)
+    if (entry === 'login')
+      return shell(
+        <Login onSignIn={backend.signInWithGoogle} demo={demo} fromQuiz={Boolean(quiz)} onBack={() => setEntry('landing')} />,
+      )
+    return shell(
+      <Landing
+        demo={demo}
+        onStart={() => {
+          setEntry('quiz')
+          window.scrollTo({ top: 0 })
+        }}
+        onSignIn={() => setEntry('login')}
+      />,
+    )
+  }
 
   const profile = {
     firstName: data.firstName ?? user.givenName,
     lastName: data.lastName ?? user.familyName,
-    birthDate: data.birthDate,
+    birthDate: data.birthDate ?? quiz?.birthDate,
     birthTime: data.birthTime,
     birthTimeUnknown: data.birthTimeUnknown,
   }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Flame, Loader2, Moon, Sparkles } from 'lucide-react'
+import { ArrowLeft, Flame, Loader2, Moon, Sparkles } from 'lucide-react'
 import GoogleIcon from '../components/GoogleIcon'
 import { cx } from '../lib/astro'
 
@@ -9,7 +9,7 @@ const FEATURES = [
   { Icon: Flame, title: 'Votre série sauvegardée', text: 'Retrouvez votre progression sur tous vos appareils.' },
 ]
 
-export default function Login({ onSignIn, demo }) {
+export default function Login({ onSignIn, demo, fromQuiz = false, onBack }) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(null)
 
@@ -26,14 +26,38 @@ export default function Login({ onSignIn, demo }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col justify-between pb-10 pt-16">
+    <div className="flex min-h-screen flex-col justify-between pb-10 pt-6">
       <div>
-        <h1 className="text-[40px] font-extrabold leading-none tracking-tight text-white">
-          Aligned<span className="text-blue-600">.</span>
-        </h1>
-        <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-zinc-400">
-          L’astrologie personnalisée au service de vos journées de travail.
-        </p>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Retour à l’accueil"
+            className="-ml-1.5 mb-8 rounded-lg p-1.5 text-zinc-400 transition-all duration-300 ease-in-out hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        )}
+        {fromQuiz ? (
+          <>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-500">Dernière étape</p>
+            <h1 className="mt-3 text-[30px] font-extrabold leading-tight tracking-tight text-white">
+              Créez votre compte pour recevoir votre analyse.
+            </h1>
+            <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
+              Vos réponses sont gardées : il ne reste que votre nom et votre heure de naissance.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-[40px] font-extrabold leading-none tracking-tight text-white">
+              Aligned<span className="text-blue-600">.</span>
+            </h1>
+            <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-zinc-400">
+              L’astrologie personnalisée au service de vos journées de travail.
+            </p>
+          </>
+        )}
 
         <ul className="mt-10 flex flex-col gap-2.5">
           {FEATURES.map(({ Icon, title, text }) => (
