@@ -361,28 +361,35 @@ export default function Home({ today, user, profile, onOpenProfile, daily, onRet
   return (
     <>
       <Header today={today} energy={72} user={user} profile={profile} onOpenProfile={onOpenProfile} />
-      <CosmicInsight
-        daily={daily}
-        sign={sunSign(profile.birthDate)}
-        onRetry={onRetryDaily}
-        trialAvailable={trialAvailable}
-        onUnlock={onUnlock}
-      />
-      <AlignmentTasks tasks={tasks} onToggle={onToggleTask} loading={daily.status !== 'ready'} locked={locked} />
-      <StreakCard
-        today={today}
-        completed={streak.completed}
-        streak={streak.current}
-        best={streak.best}
-        remaining={streak.remaining}
-      />
-      <ManifestationStrip
-        today={today}
-        selectedDate={selectedDate}
-        onSelectDate={onSelectDate}
-        onOpenCalendar={onOpenCalendar}
-        locked={locked}
-      />
+      {/* Sur ordinateur : horoscope et tâches à gauche, série et calendrier à droite. */}
+      <div className="flex flex-col gap-7 lg:grid lg:grid-cols-2 lg:items-start lg:gap-10">
+        <div className="flex flex-col gap-7">
+          <CosmicInsight
+            daily={daily}
+            sign={sunSign(profile.birthDate)}
+            onRetry={onRetryDaily}
+            trialAvailable={trialAvailable}
+            onUnlock={onUnlock}
+          />
+          <AlignmentTasks tasks={tasks} onToggle={onToggleTask} loading={daily.status !== 'ready'} locked={locked} />
+        </div>
+        <div className="flex flex-col gap-7">
+          <StreakCard
+            today={today}
+            completed={streak.completed}
+            streak={streak.current}
+            best={streak.best}
+            remaining={streak.remaining}
+          />
+          <ManifestationStrip
+            today={today}
+            selectedDate={selectedDate}
+            onSelectDate={onSelectDate}
+            onOpenCalendar={onOpenCalendar}
+            locked={locked}
+          />
+        </div>
+      </div>
     </>
   )
 }

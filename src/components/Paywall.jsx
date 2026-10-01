@@ -112,8 +112,10 @@ export default function Paywall({ open, trialAvailable, onClose, onSubscribe }) 
         aria-label="Abonnement Aligned"
         className={cx(
           'absolute inset-x-0 bottom-0 mx-auto max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-b-0 border-zinc-900 bg-zinc-950 px-5 pt-5',
-          'transition-transform duration-300 ease-in-out',
-          open ? 'translate-y-0' : 'translate-y-full',
+          'transition-all duration-300 ease-in-out',
+          // Sur ordinateur : fenêtre centrée plutôt que panneau en bas d'écran.
+          'lg:bottom-auto lg:top-[8vh] lg:rounded-2xl lg:border-b',
+          open ? 'translate-y-0 lg:opacity-100' : 'translate-y-full lg:translate-y-4 lg:opacity-0',
         )}
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}
       >

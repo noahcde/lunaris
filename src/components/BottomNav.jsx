@@ -10,7 +10,7 @@ export default function BottomNav({ active, onNavigate }) {
   return (
     <nav
       aria-label="Navigation principale"
-      className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-4"
+      className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md px-4 lg:max-w-xs"
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
     >
       <ul className="flex items-center gap-1.5 rounded-2xl border border-zinc-900 bg-zinc-950/90 p-1.5 backdrop-blur-xl">

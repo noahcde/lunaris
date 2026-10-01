@@ -232,9 +232,9 @@ export default function App() {
     await backend.signOut()
   }
 
-  const shell = (children) => (
+  const shell = (children, wide = false) => (
     <div className="min-h-screen bg-black font-sans text-zinc-400">
-      <div className="mx-auto w-full max-w-md px-5">{children}</div>
+      <div className={`mx-auto w-full px-5 ${wide ? 'max-w-md lg:max-w-6xl lg:px-10' : 'max-w-md'}`}>{children}</div>
     </div>
   )
 
@@ -255,6 +255,7 @@ export default function App() {
         }}
         onSignIn={() => setEntry('login')}
       />,
+      true,
     )
   }
 
@@ -282,7 +283,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-black font-sans text-zinc-400">
-      <main key={page} className="mx-auto flex w-full max-w-md animate-page-in flex-col gap-7 px-5 pb-32">
+      <main key={page} className="mx-auto flex w-full max-w-md animate-page-in flex-col gap-7 px-5 pb-32 lg:max-w-5xl lg:px-10">
         {page === 'accueil' ? (
           <Home
             today={today}

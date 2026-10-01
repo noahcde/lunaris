@@ -145,73 +145,77 @@ export default function CalendarPage({ today, selectedDate, onSelectDate, locked
         <p className="mt-2 text-[13px] text-zinc-400">Vos jours d’alignement, mois par mois.</p>
       </header>
 
-      <section className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => shiftMonth(-1)}
-            aria-label="Mois précédent"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-900 text-zinc-400 transition-all duration-300 ease-in-out hover:border-zinc-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <div className="text-center">
-            <p className="text-[15px] font-semibold text-white">{monthLabel}</p>
-            <p className="mt-0.5 text-[11px] tabular-nums text-zinc-500">
-              <span className="text-purple-400">{highCount} jours fastes</span> · {blockedCount} bloqués
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => shiftMonth(1)}
-            aria-label="Mois suivant"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-900 text-zinc-400 transition-all duration-300 ease-in-out hover:border-zinc-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="mt-4 grid grid-cols-7 gap-1.5">
-          {WEEKDAYS.map((d, i) => (
-            <span
-              key={i}
-              className="pb-1 text-center text-[10px] font-semibold uppercase tracking-[0.1em] text-zinc-600"
-            >
-              {d}
-            </span>
-          ))}
-          {cells.map((cell, i) =>
-            cell ? (
-              <MonthCell
-                key={i}
-                cell={cell}
-                today={today}
-                selected={isSameDay(cell.date, selectedDate)}
-                onSelect={() => onSelectDate(cell.date)}
-              />
-            ) : (
-              <span key={i} aria-hidden="true" />
-            ),
-          )}
-        </div>
-
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <Legend showToday />
-          {!isCurrentMonth && (
+      {/* Sur ordinateur : le mois à gauche, le détail du jour et les fenêtres à droite. */}
+      <div className="flex flex-col gap-7 lg:grid lg:grid-cols-[3fr_2fr] lg:items-start lg:gap-10">
+        <section className="rounded-2xl border border-zinc-900 bg-zinc-950 p-4 lg:p-6">
+          <div className="flex items-center justify-between">
             <button
               type="button"
-              onClick={() => pick(today)}
-              className="shrink-0 rounded-lg px-1.5 py-1 text-xs font-medium text-blue-500 transition-all duration-300 ease-in-out hover:text-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              onClick={() => shiftMonth(-1)}
+              aria-label="Mois précédent"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-900 text-zinc-400 transition-all duration-300 ease-in-out hover:border-zinc-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
             >
-              Aujourd’hui
+              <ChevronLeft className="h-4 w-4" />
             </button>
-          )}
+            <div className="text-center">
+              <p className="text-[15px] font-semibold text-white">{monthLabel}</p>
+              <p className="mt-0.5 text-[11px] tabular-nums text-zinc-500">
+                <span className="text-purple-400">{highCount} jours fastes</span> · {blockedCount} bloqués
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => shiftMonth(1)}
+              aria-label="Mois suivant"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-900 text-zinc-400 transition-all duration-300 ease-in-out hover:border-zinc-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mt-4 grid grid-cols-7 gap-1.5">
+            {WEEKDAYS.map((d, i) => (
+              <span
+                key={i}
+                className="pb-1 text-center text-[10px] font-semibold uppercase tracking-[0.1em] text-zinc-600"
+              >
+                {d}
+              </span>
+            ))}
+            {cells.map((cell, i) =>
+              cell ? (
+                <MonthCell
+                  key={i}
+                  cell={cell}
+                  today={today}
+                  selected={isSameDay(cell.date, selectedDate)}
+                  onSelect={() => onSelectDate(cell.date)}
+                />
+              ) : (
+                <span key={i} aria-hidden="true" />
+              ),
+            )}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <Legend showToday />
+            {!isCurrentMonth && (
+              <button
+                type="button"
+                onClick={() => pick(today)}
+                className="shrink-0 rounded-lg px-1.5 py-1 text-xs font-medium text-blue-500 transition-all duration-300 ease-in-out hover:text-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              >
+                Aujourd’hui
+              </button>
+            )}
+          </div>
+        </section>
+
+        <div className="flex flex-col gap-7">
+          <DayDetail date={selectedDate} info={selectedInfo} locked={locked} />
+          <UpcomingWindows today={today} onPick={pick} locked={locked} />
         </div>
-      </section>
-
-      <DayDetail date={selectedDate} info={selectedInfo} locked={locked} />
-
-      <UpcomingWindows today={today} onPick={pick} locked={locked} />
+      </div>
     </>
   )
 }

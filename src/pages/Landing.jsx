@@ -99,13 +99,13 @@ function Reviews({ demo }) {
   if (list.length === 0) return null
   return (
     <section>
-      <h2 className="text-xl font-bold tracking-tight text-white">Ils se sont alignés</h2>
+      <h2 className="text-xl font-bold tracking-tight text-white lg:text-3xl">Ils se sont alignés</h2>
       {examples && (
         <p className="mt-1 text-xs text-zinc-500">Aperçu : remplacez ces exemples par de vrais avis d’utilisateurs.</p>
       )}
-      <ul className="no-scrollbar -mx-5 mt-4 flex snap-x gap-3 overflow-x-auto px-5 pb-1">
+      <ul className="no-scrollbar -mx-5 mt-4 flex snap-x gap-3 overflow-x-auto px-5 pb-1 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0">
         {list.map((r, i) => (
-          <li key={i} className="w-[260px] shrink-0 snap-start rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
+          <li key={i} className="w-[260px] shrink-0 snap-start rounded-2xl border border-zinc-900 bg-zinc-950 p-4 lg:w-auto">
             <div className="flex items-center gap-0.5" aria-label="5 étoiles sur 5">
               {[0, 1, 2, 3, 4].map((s) => (
                 <Star key={s} className="h-3.5 w-3.5 fill-blue-600 text-blue-600" />
@@ -122,10 +122,36 @@ function Reviews({ demo }) {
   )
 }
 
+function StartButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cx(
+        'group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-4 text-[15px] font-semibold text-white',
+        'shadow-[0_0_24px_rgba(37,99,235,0.5)] transition-all duration-300 ease-in-out hover:bg-blue-500',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+      )}
+    >
+      Révéler mon analyse astrale
+      <ArrowRight className="h-4 w-4 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5" />
+    </button>
+  )
+}
+
+function DesktopStart({ onStart, className }) {
+  return (
+    <div className={cx('hidden lg:block lg:max-w-sm', className)}>
+      <StartButton onClick={onStart} />
+      <p className="mt-2 text-center text-xs text-zinc-500">5 questions · moins de 2 minutes</p>
+    </div>
+  )
+}
+
 export default function Landing({ onStart, onSignIn, demo }) {
   return (
-    <div className="pb-36">
-      <header className="flex items-center justify-between pt-6">
+    <div className="pb-36 lg:pb-24">
+      <header className="flex items-center justify-between pt-6 lg:pt-8">
         <p className="text-xl font-extrabold tracking-tight text-white">
           Aligned<span className="text-blue-600">.</span>
         </p>
@@ -138,32 +164,37 @@ export default function Landing({ onStart, onSignIn, demo }) {
         </button>
       </header>
 
-      <section className="pt-10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-500">Astrologie × productivité</p>
-        <h1 className="mt-3 text-[34px] font-extrabold leading-[1.08] tracking-tight text-white">
-          Votre ciel du jour, transformé en actions concrètes.
-        </h1>
-        <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-          Aligned lit votre signe, la Lune et le climat astral du jour pour vous donner chaque matin un horoscope
-          personnel et trois actions simples à accomplir.
-        </p>
-        <ZodiacWheel className="mx-auto mt-6 w-full max-w-[320px]" />
+      <section className="pt-10 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:pt-20">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-500">Astrologie × productivité</p>
+          <h1 className="mt-3 text-[34px] font-extrabold leading-[1.08] tracking-tight text-white lg:text-[56px]">
+            Votre ciel du jour, transformé en actions concrètes.
+          </h1>
+          <p className="mt-4 text-[15px] leading-relaxed text-zinc-400 lg:text-lg">
+            Aligned lit votre signe, la Lune et le climat astral du jour pour vous donner chaque matin un horoscope
+            personnel et trois actions simples à accomplir.
+          </p>
+          <DesktopStart onStart={onStart} className="mt-8" />
+        </div>
+        <ZodiacWheel className="mx-auto mt-6 w-full max-w-[320px] lg:mt-0 lg:max-w-[440px]" />
       </section>
 
-      <section className="mt-6">
-        <h2 className="text-xl font-bold tracking-tight text-white">Ce que vous recevez chaque matin</h2>
-        <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-          Un insight écrit pour vous, trois tâches qui en découlent, et un calendrier qui montre vos jours les plus
-          favorables.
-        </p>
-        <div className="mt-6">
+      <section className="mt-6 lg:mt-24 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16">
+        <div className="lg:order-2">
+          <h2 className="text-xl font-bold tracking-tight text-white lg:text-3xl">Ce que vous recevez chaque matin</h2>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-400 lg:text-base">
+            Un insight écrit pour vous, trois tâches qui en découlent, et un calendrier qui montre vos jours les plus
+            favorables.
+          </p>
+        </div>
+        <div className="mt-6 lg:order-1 lg:mt-0">
           <AppPreview />
         </div>
       </section>
 
-      <section className="mt-14">
-        <h2 className="text-xl font-bold tracking-tight text-white">Comment ça marche</h2>
-        <ol className="mt-4 flex flex-col gap-2.5">
+      <section className="mt-14 lg:mt-24">
+        <h2 className="text-xl font-bold tracking-tight text-white lg:text-3xl">Comment ça marche</h2>
+        <ol className="mt-4 flex flex-col gap-2.5 lg:mt-6 lg:grid lg:grid-cols-3 lg:gap-4">
           {STEPS.map(({ Icon, title, text }, i) => (
             <li key={title} className="flex gap-3.5 rounded-2xl border border-zinc-900 bg-zinc-950 p-4">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-zinc-900 bg-black">
@@ -180,7 +211,7 @@ export default function Landing({ onStart, onSignIn, demo }) {
         </ol>
       </section>
 
-      <section className="mt-14 rounded-2xl border border-zinc-900 bg-zinc-950 p-5">
+      <section className="mt-14 rounded-2xl border border-zinc-900 bg-zinc-950 p-5 lg:mt-24 lg:p-8">
         <div className="flex items-center justify-between">
           {PHASES.map((f) => (
             <MoonPhase key={f} fraction={f} />
@@ -197,27 +228,18 @@ export default function Landing({ onStart, onSignIn, demo }) {
         </p>
       </section>
 
-      <div className="mt-14">
+      <div className="mt-14 lg:mt-24">
         <Reviews demo={demo} />
       </div>
 
+      <DesktopStart onStart={onStart} className="mx-auto mt-16" />
+
       <div
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-900 bg-black/85 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-30 border-t lg:hidden border-zinc-900 bg-black/85 backdrop-blur"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
       >
         <div className="mx-auto w-full max-w-md px-5 pt-4">
-          <button
-            type="button"
-            onClick={onStart}
-            className={cx(
-              'group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-4 text-[15px] font-semibold text-white',
-              'shadow-[0_0_24px_rgba(37,99,235,0.5)] transition-all duration-300 ease-in-out hover:bg-blue-500',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-            )}
-          >
-            Révéler mon analyse astrale
-            <ArrowRight className="h-4 w-4 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5" />
-          </button>
+          <StartButton onClick={onStart} />
           <p className="mt-2 text-center text-[11px] text-zinc-500">5 questions · moins de 2 minutes</p>
         </div>
       </div>
