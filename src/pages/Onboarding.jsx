@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import { cx, sunSign } from '../lib/astro'
+import Logo from '../components/Logo'
 
 const inputClass = cx(
   'w-full rounded-xl border border-zinc-900 bg-zinc-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600',
@@ -63,6 +64,7 @@ export default function Onboarding({ initial, onSubmit, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-screen flex-col pb-10 pt-8">
+      <Logo size="sm" className="mb-6" />
       {onCancel && (
         <button
           type="button"

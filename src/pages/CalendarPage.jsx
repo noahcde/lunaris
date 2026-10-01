@@ -5,6 +5,7 @@ import Legend from '../components/Legend'
 import MoonCycle from '../components/MoonCycle'
 import UpcomingWindows from '../components/UpcomingWindows'
 import { capitalize, cx, getDayInfo, isSameDay } from '../lib/astro'
+import Logo from '../components/Logo'
 
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
@@ -85,6 +86,7 @@ export default function CalendarPage({ today, selectedDate, onSelectDate, locked
   return (
     <>
       <header className="pt-8">
+        <Logo size="sm" className="mb-4" />
         <h1 className="text-[28px] font-extrabold leading-none tracking-tight text-white">
           Calendrier<span className="text-blue-600">.</span>
         </h1>

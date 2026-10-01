@@ -2,6 +2,7 @@ import { ArrowRight, CalendarDays, Check, ListChecks, MessageCircleQuestion, Moo
 import ZodiacWheel from '../components/ZodiacWheel'
 import { EXAMPLE_REVIEWS, REVIEWS } from '../content/reviews'
 import { cx } from '../lib/astro'
+import Logo from '../components/Logo'
 
 const STEPS = [
   { Icon: MessageCircleQuestion, title: 'Vous répondez à 5 questions', text: 'Ce qui vous occupe, la période que vous traversez, votre date de naissance.' },
@@ -152,9 +153,7 @@ export default function Landing({ onStart, onSignIn, demo }) {
   return (
     <div className="pb-36 lg:pb-24">
       <header className="flex items-center justify-between pt-6 lg:pt-8">
-        <p className="text-xl font-extrabold tracking-tight text-white">
-          Aligned<span className="text-blue-600">.</span>
-        </p>
+        <Logo />
         <button
           type="button"
           onClick={onSignIn}

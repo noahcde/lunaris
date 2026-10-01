@@ -12,6 +12,7 @@ import { addDays } from './lib/astro'
 import { bestStreak, currentStreak, dayKey } from './lib/streak'
 import { getBackend } from './lib/backend'
 import { loadQuiz, saveQuiz } from './lib/quiz'
+import Logo from './components/Logo'
 
 const PAGES = ['accueil', 'calendrier']
 
@@ -28,9 +29,7 @@ const pageFromHash = () => {
 function Splash() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <p className="animate-pulse text-2xl font-extrabold tracking-tight text-white">
-        Aligned<span className="text-blue-600">.</span>
-      </p>
+      <Logo size="lg" className="animate-pulse" />
     </div>
   )
 }

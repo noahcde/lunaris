@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Briefcase, Check, Compass, Heart, Leaf, PenLine,
 import ZodiacWheel from '../components/ZodiacWheel'
 import { cx, getMoonPhase, sunSign } from '../lib/astro'
 import { OTHER, OTHER_MAX, QUESTIONS, answerLabel, otherKey } from '../lib/quiz'
+import Logo from '../components/Logo'
 
 const FOCUS_ICONS = { amour: Heart, carriere: Briefcase, energie: Leaf, voie: Compass, confiance: Sparkles, autre: PenLine }
 
@@ -65,7 +66,8 @@ function Analysis({ onDone }) {
   }, [done, onDone])
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-10 text-center" aria-live="polite">
+    <div className="relative flex min-h-screen flex-col items-center justify-center py-10 text-center" aria-live="polite">
+      <Logo size="sm" className="absolute left-0 top-6" />
       <ZodiacWheel className="w-56" spinning />
       <h1 className="mt-6 text-xl font-bold tracking-tight text-white">Analyse de votre ciel…</h1>
       <ul className="mt-6 flex w-full max-w-xs flex-col gap-3 text-left">
@@ -104,8 +106,9 @@ function Result({ answers, onContinue }) {
     ['Lune du jour', moon.name],
   ]
   return (
-    <div className="flex min-h-screen flex-col justify-between pb-10 pt-14">
+    <div className="flex min-h-screen flex-col justify-between pb-10 pt-6">
       <div>
+        <Logo size="sm" className="mb-8" />
         <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
           <Sparkles className="h-4 w-4 text-purple-500 drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]" strokeWidth={2} />
           Analyse terminée
@@ -156,6 +159,7 @@ export default function Quiz({ initial, onBack, onComplete }) {
 
   return (
     <div className="flex min-h-screen flex-col pb-10 pt-6">
+      <Logo size="sm" className="mb-5" />
       <div className="flex items-center gap-3">
         <button
           type="button"

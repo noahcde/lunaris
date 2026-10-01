@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft, Flame, Loader2, Moon, Sparkles } from 'lucide-react'
 import GoogleIcon from '../components/GoogleIcon'
 import { cx } from '../lib/astro'
+import Logo from '../components/Logo'
 
 const FEATURES = [
   { Icon: Sparkles, title: 'Un insight cosmique chaque jour', text: 'Calculé à partir de votre thème natal.' },
@@ -40,6 +41,7 @@ export default function Login({ onSignIn, demo, fromQuiz = false, onBack }) {
         )}
         {fromQuiz ? (
           <>
+            <Logo size="sm" className="mb-8" />
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-500">Dernière étape</p>
             <h1 className="mt-3 text-[30px] font-extrabold leading-tight tracking-tight text-white">
               Créez votre compte pour recevoir votre analyse.
@@ -50,9 +52,7 @@ export default function Login({ onSignIn, demo, fromQuiz = false, onBack }) {
           </>
         ) : (
           <>
-            <h1 className="text-[40px] font-extrabold leading-none tracking-tight text-white">
-              Aligned<span className="text-blue-600">.</span>
-            </h1>
+            <Logo as="h1" size="lg" />
             <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-zinc-400">
               L’astrologie personnalisée au service de vos journées de travail.
             </p>

@@ -7,6 +7,7 @@ import Legend from '../components/Legend'
 import UpcomingWindows from '../components/UpcomingWindows'
 import { LOCKED_TEXT, UnlockButton } from '../components/Paywall'
 import { addDays, capitalize, cx, getDayInfo, getMoonPhase, isSameDay, sunSign } from '../lib/astro'
+import Logo from '../components/Logo'
 
 /* ------------------------------------------------------------------ */
 /* Header                                                              */
@@ -21,9 +22,7 @@ function Header({ today, energy, user, profile, onOpenProfile }) {
   return (
     <header className="flex items-start justify-between pt-8">
       <div>
-        <h1 className="text-[28px] font-extrabold leading-none tracking-tight text-white">
-          Aligned<span className="text-blue-600">.</span>
-        </h1>
+        <Logo as="h1" className="text-[28px]" />
         <p className="mt-2 text-[13px] text-zinc-400">{dateLabel}</p>
         <p className="mt-0.5 flex items-center gap-1.5 whitespace-nowrap text-xs text-zinc-500">
           <Moon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
