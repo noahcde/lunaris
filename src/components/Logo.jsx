@@ -1,6 +1,6 @@
 import { cx } from '../lib/astro'
 
-// Logo Lunaris (fourni par Maxence) : un cercle et un point, comme deux phases de la Lune.
+// Icône Lunaris (fournie par Maxence) : un cercle et un point, comme deux phases de la Lune.
 export function LogoMark({ className = 'h-8 w-8' }) {
   return (
     <svg viewBox="0 0 32 32" className={cx('shrink-0', className)} aria-hidden="true">
@@ -40,19 +40,28 @@ export function LogoMoons({ className = 'h-6' }) {
   )
 }
 
-// Logo complet : les quatre lunes + « Lunaris ».
-// `size` : sm (en-têtes de page), md (accueil), lg (connexion, empilé comme le logo d'origine).
+// Logo complet : petite icône + « Lunaris » sur téléphone, les quatre lunes sur ordinateur.
+// `size` : sm (en-têtes de page), md (accueil), lg (connexion ; lunes empilées au-dessus du nom sur ordinateur).
 const SIZES = {
-  sm: { moons: 'h-[18px]', text: 'text-xl', gap: 'gap-2.5' },
-  md: { moons: 'h-6', text: 'text-[26px]', gap: 'gap-3' },
-  lg: { moons: 'h-12', text: 'text-[44px]', gap: 'gap-4' },
+  sm: { mark: 'h-7 w-7', moons: 'lg:h-[18px]', text: 'text-xl', gap: 'gap-2 lg:gap-2.5' },
+  md: { mark: 'h-9 w-9', moons: 'lg:h-6', text: 'text-[26px]', gap: 'gap-2.5 lg:gap-3' },
+  lg: { mark: 'h-12 w-12', moons: 'lg:h-12', text: 'text-[40px] lg:text-[44px]', gap: 'gap-3 lg:gap-4' },
 }
 
 export default function Logo({ size = 'md', className, as: Tag = 'p' }) {
   const s = SIZES[size]
   return (
-    <Tag className={cx('flex leading-none', size === 'lg' ? 'flex-col items-start' : 'items-center', s.gap, s.text, className)}>
-      <LogoMoons className={s.moons} />
+    <Tag
+      className={cx(
+        'flex items-center leading-none',
+        size === 'lg' && 'lg:flex-col lg:items-start',
+        s.gap,
+        s.text,
+        className,
+      )}
+    >
+      <LogoMark className={cx(s.mark, 'lg:hidden')} />
+      <LogoMoons className={cx('hidden lg:block', s.moons)} />
       <span className="font-logo font-medium tracking-tight text-[#e4e0f2]">Lunaris</span>
     </Tag>
   )
