@@ -39,6 +39,8 @@ const ALLOWED_ORIGINS = [
   'https://horoscope-55ff8.firebaseapp.com',
   'https://lunaris.fr',
   'https://www.lunaris.fr',
+  'https://lunaris-app.fr',
+  'https://www.lunaris-app.fr',
   'http://localhost:5173',
 ]
 const originOf = (request) => {
