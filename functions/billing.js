@@ -6,7 +6,8 @@ import Stripe from 'stripe'
 import { getFirestore } from 'firebase-admin/firestore'
 
 export const TRIAL_DAYS = 2
-const PRODUCT_NAME = 'Aligned Premium'
+const PRODUCT_NAME = 'Lunaris Premium'
+// Les clés « aligned_… » datent de l'ancien nom : elles restent pour retrouver les tarifs et abonnements existants.
 const PLANS = {
   monthly: { lookupKey: 'aligned_premium_monthly', amount: 699, interval: 'month', label: 'mensuel' },
   yearly: { lookupKey: 'aligned_premium_yearly', amount: 4999, interval: 'year', label: 'annuel' },
@@ -26,8 +27,17 @@ export const isPlan = (plan) => Object.hasOwn(PLANS, plan)
 // Les deux tarifs sont créés automatiquement chez Stripe au premier achat, puis retrouvés par leur clé.
 async function priceId(plan) {
   const { lookupKey, amount, interval, label } = PLANS[plan]
-  const found = await getStripe().prices.list({ lookup_keys: [lookupKey], active: true, limit: 1 })
-  if (found.data[0]) return found.data[0].id
+  const found = await getStripe().prices.list({ lookup_keys: [lookupKey], active: true, limit: 1, expand: ['data.product'] })
+  if (found.data[0]) {
+    const { id, product } = found.data[0]
+    // Renomme le produit déjà créé (ex. ancien nom « Aligned ») pour que le client voie le bon nom.
+    const name = `${PRODUCT_NAME} (${label})`
+    if (product?.name && product.name !== name) {
+      // Un échec de renommage ne doit jamais bloquer le paiement.
+      await getStripe().products.update(product.id, { name }).catch(() => {})
+    }
+    return id
+  }
   const price = await getStripe().prices.create({
     currency: 'eur',
     unit_amount: amount,
