@@ -35,6 +35,8 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
 // Adresses vers lesquelles Stripe peut renvoyer l'utilisateur après le paiement.
 const ALLOWED_ORIGINS = [
+  'https://lunaris.fr',
+  'https://www.lunaris.fr',
   'https://horoscope-55ff8.web.app',
   'https://horoscope-55ff8.firebaseapp.com',
   'http://localhost:5173',
