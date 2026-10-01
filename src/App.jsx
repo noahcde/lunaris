@@ -16,6 +16,8 @@ import Logo from './components/Logo'
 import InstallGuide from './components/InstallGuide'
 import NotificationSettings from './components/NotificationSettings'
 import { isStandalone } from './lib/pwa'
+import LegalPage from './pages/LegalPage'
+import { DOC_IDS } from './content/legal'
 
 const PAGES = ['accueil', 'calendrier']
 
@@ -25,6 +27,12 @@ const TASK_COUNT = 3
 const returningFromStripe = () => new URLSearchParams(window.location.search).has('abonnement')
 // Retour après un paiement réussi : on propose d'installer l'app sur l'écran d'accueil.
 const returningFromPayment = () => new URLSearchParams(window.location.search).get('abonnement') === 'ok'
+
+// Pages légales (#cgu, #cgv…) : ouvrables par lien direct, connecté ou non.
+const legalFromHash = () => {
+  const hash = window.location.hash.replace('#', '')
+  return DOC_IDS.includes(hash) ? hash : null
+}
 
 const pageFromHash = () => {
   const hash = window.location.hash.replace('#', '')
@@ -56,6 +64,8 @@ export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const [page, setPage] = useState(pageFromHash)
+  const [legal, setLegal] = useState(legalFromHash)
+  const legalFromApp = useRef(false) // ouverte depuis un lien de l'app : « Retour » revient en arrière
   const [selectedDate, setSelectedDate] = useState(() => addDays(today, 1))
   const [daily, setDaily] = useState({ status: 'idle' }) // horoscope et tâches générés par l'IA
   const [billing, setBilling] = useState(null) // état de l'abonnement Stripe
@@ -135,7 +145,16 @@ export default function App() {
 
   // L'URL (#accueil, #calendrier) suit la page affichée, et le bouton retour fonctionne.
   useEffect(() => {
-    const onHashChange = () => setPage(pageFromHash())
+    const onHashChange = () => {
+      const next = legalFromHash()
+      // Venir d'une page de l'app (et non d'un autre onglet légal) : « Retour » y ramène.
+      setLegal((prev) => {
+        if (next && !prev) legalFromApp.current = true
+        if (!next) legalFromApp.current = false
+        return next
+      })
+      if (!next) setPage(pageFromHash())
+    }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
@@ -269,6 +288,21 @@ export default function App() {
     </div>
   )
 
+  const closeLegal = () => {
+    if (legalFromApp.current) {
+      legalFromApp.current = false
+      window.history.back()
+      return
+    }
+    try {
+      window.history.replaceState(null, '', window.location.pathname)
+    } catch {
+      // Adresse non modifiable : on ferme simplement la page.
+    }
+    setLegal(null)
+  }
+
+  if (legal) return shell(<LegalPage docId={legal} onClose={closeLegal} />, true)
   if (!backend || user === undefined || (user && !data)) return shell(<Splash />)
   if (!user) {
     const demo = backend.mode === 'demo'

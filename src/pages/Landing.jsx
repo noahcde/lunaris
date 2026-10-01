@@ -1,3 +1,4 @@
+import { LegalLinks } from './LegalPage'
 import { ArrowRight, CalendarDays, Check, ListChecks, MessageCircleQuestion, Moon, Sparkles, Star } from 'lucide-react'
 import ZodiacWheel from '../components/ZodiacWheel'
 import { EXAMPLE_REVIEWS, REVIEWS } from '../content/reviews'
@@ -232,6 +233,11 @@ export default function Landing({ onStart, onSignIn, demo }) {
       </div>
 
       <DesktopStart onStart={onStart} className="mx-auto mt-16" />
+
+      <footer className="mt-14 border-t border-zinc-900 pt-6 lg:mt-20">
+        <LegalLinks />
+        <p className="mt-3 text-center text-[11px] text-zinc-700">© 2026 Lunaris</p>
+      </footer>
 
       <div
         className="fixed inset-x-0 bottom-0 z-30 border-t lg:hidden border-zinc-900 bg-black/85 backdrop-blur"

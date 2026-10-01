@@ -77,10 +77,12 @@ function PlanOption({ id, plan, selected, onSelect }) {
 export default function Paywall({ open, trialAvailable, onClose, onSubscribe }) {
   const [plan, setPlan] = useState('yearly')
   const [state, setState] = useState('idle') // idle | loading | error
+  const [accepted, setAccepted] = useState(false) // CGV + accès immédiat (renonciation à la rétractation)
 
   useEffect(() => {
     if (!open) return
     setState('idle')
+    setAccepted(false)
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -154,15 +156,31 @@ export default function Paywall({ open, trialAvailable, onClose, onSubscribe }) 
           ))}
         </div>
 
+        <label className="mt-5 flex cursor-pointer items-start gap-3 text-xs leading-relaxed text-zinc-400">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-zinc-700 bg-black accent-blue-600"
+          />
+          <span>
+            J’accepte les{' '}
+            <a href="#cgv" className="text-zinc-300 underline underline-offset-2 hover:text-white">
+              conditions générales de vente
+            </a>{' '}
+            et je demande l’accès immédiat à Lunaris Premium. Je reconnais perdre mon droit de rétractation dès cet accès.
+          </span>
+        </label>
+
         <button
           type="button"
           onClick={subscribe}
-          disabled={state === 'loading'}
+          disabled={state === 'loading' || !accepted}
           className={cx(
-            'mt-5 w-full rounded-xl bg-blue-600 px-4 py-3.5 text-[15px] font-semibold text-white',
+            'mt-4 w-full rounded-xl bg-blue-600 px-4 py-3.5 text-[15px] font-semibold text-white',
             'shadow-[0_0_20px_rgba(37,99,235,0.45)] transition-all duration-300 ease-in-out hover:bg-blue-500',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950',
-            'disabled:cursor-wait disabled:opacity-70',
+            state === 'loading' ? 'disabled:cursor-wait disabled:opacity-70' : 'disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none',
           )}
         >
           {state === 'loading' ? 'Ouverture du paiement…' : trialAvailable ? 'Commencer mes 2 jours offerts' : 'S’abonner'}

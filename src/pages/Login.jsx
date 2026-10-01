@@ -131,7 +131,17 @@ export default function Login({ onSignIn, demo, fromQuiz = false, onBack }) {
         <p className="mt-4 text-center text-[11px] leading-relaxed text-zinc-500">
           {demo
             ? "Mode démo : la connexion est simulée et aucun compte Google n’est utilisé."
-            : "Nous récupérons uniquement votre nom et votre adresse e-mail."}
+            : "Nous récupérons uniquement votre nom, votre photo et votre adresse e-mail."}
+          <br />
+          En continuant, vous acceptez les{" "}
+          <a href="#cgu" className="underline underline-offset-2 hover:text-zinc-300">
+            conditions d’utilisation
+          </a>{" "}
+          et la{" "}
+          <a href="#confidentialite" className="underline underline-offset-2 hover:text-zinc-300">
+            politique de confidentialité
+          </a>
+          .
         </p>
       </div>
     </div>

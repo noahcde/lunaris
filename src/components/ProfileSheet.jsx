@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { CreditCard, Download, LogOut, Pencil, RotateCcw, Sparkles, X } from 'lucide-react'
 import { cx, sunSign } from '../lib/astro'
+import { LegalLinks } from '../pages/LegalPage'
 
 const formatBirth = (profile) => {
   const [y, m, d] = profile.birthDate.split('-').map(Number)
@@ -103,7 +104,7 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
           {billing?.status === 'free' ? null : billing?.active ? (
             <button type="button" onClick={onManageBilling} className={cx(actionClass, 'text-white')}>
               <CreditCard className="h-4 w-4 text-blue-600" />
-              {demo ? 'Résilier l’abonnement (démo)' : 'Gérer mon abonnement'}
+              {demo ? 'Résilier l’abonnement (démo)' : 'Gérer ou résilier mon abonnement'}
             </button>
           ) : (
             <button type="button" onClick={onSubscribe} className={cx(actionClass, 'text-white')}>
@@ -132,6 +133,7 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
             Se déconnecter
           </button>
         </div>
+        <LegalLinks className="mt-5" />
       </div>
     </div>
   )
