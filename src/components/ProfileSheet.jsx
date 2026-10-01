@@ -16,6 +16,7 @@ const PLAN_LABELS = { monthly: 'Mensuel', yearly: 'Annuel' }
 const billingLabel = (billing) => {
   if (!billing) return '…'
   if (!billing.active) return 'Aucun'
+  if (billing.status === 'free') return 'Accès offert'
   if (billing.status === 'trialing' && billing.trialEnd) return `Essai offert jusqu’au ${shortDate(billing.trialEnd)}`
   const plan = PLAN_LABELS[billing.plan] ?? 'Premium'
   if (!billing.periodEnd) return plan
@@ -95,7 +96,7 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
         </div>
 
         <div className="mt-5 flex flex-col gap-2">
-          {billing?.active ? (
+          {billing?.status === 'free' ? null : billing?.active ? (
             <button type="button" onClick={onManageBilling} className={cx(actionClass, 'text-white')}>
               <CreditCard className="h-4 w-4 text-blue-600" />
               {demo ? 'Résilier l’abonnement (démo)' : 'Gérer mon abonnement'}

@@ -28,6 +28,8 @@ const OPENAI_API_KEY = defineSecret('OPENAI_API_KEY')
 const STRIPE_SECRET_KEY = defineSecret('STRIPE_SECRET_KEY')
 // Modèle OpenAI utilisé, modifiable sans toucher au code (fichier functions/.env).
 const OPENAI_MODEL = defineString('OPENAI_MODEL', { default: 'gpt-5.4-mini' })
+// Comptes Google ayant tout l'accès sans abonnement (propriétaires de l'app), séparés par des virgules (functions/.env).
+const FREE_ACCESS_EMAILS = defineString('FREE_ACCESS_EMAILS', { default: '' })
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -40,6 +42,28 @@ const ALLOWED_ORIGINS = [
 const originOf = (request) => {
   const origin = request.rawRequest?.headers?.origin
   return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+}
+
+const FREE_ACCESS = {
+  active: true,
+  status: 'free',
+  plan: null,
+  trialEnd: null,
+  periodEnd: null,
+  cancelAtPeriodEnd: false,
+  trialUsed: true,
+  hasCustomer: false,
+}
+
+// Adresse vérifiée par Google uniquement : impossible de s'attribuer l'accès en changeant son profil.
+const hasFreeAccess = (request) => {
+  const { email, email_verified: verified } = request.auth?.token ?? {}
+  if (!email || !verified) return false
+  const allowed = FREE_ACCESS_EMAILS.value()
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+  return allowed.includes(email.toLowerCase())
 }
 
 const requireUid = (request) => {
@@ -61,6 +85,7 @@ export const getBilling = onCall(
   { secrets: [STRIPE_SECRET_KEY], region: 'europe-west1', maxInstances: 10 },
   async (request) => {
     const uid = requireUid(request)
+    if (hasFreeAccess(request)) return FREE_ACCESS
     const { billing } = await loadDeps()
     return stripeCall('Lecture de l’abonnement impossible', uid, () =>
       billing.getBillingState(uid, { refresh: request.data?.refresh === true }),
@@ -106,7 +131,9 @@ export const getDaily = onCall(
     const { db, FieldValue, generateDaily, billing } = await loadDeps()
 
     // Sans abonnement, aucun contenu n'est envoyé : l'app affiche un texte flouté à la place.
-    const state = await stripeCall('Lecture de l’abonnement impossible', uid, () => billing.getBillingState(uid))
+    const state = hasFreeAccess(request)
+      ? FREE_ACCESS
+      : await stripeCall('Lecture de l’abonnement impossible', uid, () => billing.getBillingState(uid))
     if (!state.active) return { date, locked: true }
 
     const cacheRef = db.doc(`users/${uid}/daily/${date}`)
