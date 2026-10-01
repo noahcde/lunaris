@@ -6,7 +6,7 @@ export default function Legend({ showToday = false }) {
         Haute manifestation
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="h-2 w-2 rounded-[3px] border border-amber-500 bg-amber-500/20" />
+        <span className="h-2 w-2 rounded-[3px] border border-red-500 bg-red-500/20" />
         Bloqué
       </span>
       {showToday && (

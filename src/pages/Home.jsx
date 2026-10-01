@@ -293,9 +293,9 @@ function DayCell({ date, info, selected, onSelect }) {
         status === 'normal' && 'border-zinc-800 bg-zinc-950 text-zinc-400',
         status === 'high' &&
           'border-purple-500 bg-zinc-950 text-white shadow-[0_6px_14px_-8px_rgba(168,85,247,0.9)]',
-        status === 'blocked' && 'border-amber-500/50 bg-amber-500/[0.08] text-amber-300',
+        status === 'blocked' && 'border-red-500/50 bg-red-500/[0.08] text-red-300',
         selected && status === 'normal' && 'border-zinc-600',
-        selected && status === 'blocked' && 'bg-amber-500/[0.14]',
+        selected && status === 'blocked' && 'bg-red-500/[0.14]',
         selected && status === 'high' && 'bg-purple-500/[0.08]',
       )}
     >

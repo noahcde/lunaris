@@ -40,7 +40,7 @@ function MonthCell({ cell, today, selected, onSelect }) {
         info.status === 'normal' && 'border-zinc-900 bg-zinc-950 text-zinc-400',
         info.status === 'high' &&
           'border-purple-500 bg-zinc-950 text-white shadow-[0_6px_12px_-8px_rgba(168,85,247,0.9)]',
-        info.status === 'blocked' && 'border-amber-500/50 bg-amber-500/[0.08] text-amber-300',
+        info.status === 'blocked' && 'border-red-500/50 bg-red-500/[0.08] text-red-300',
         isPast && 'opacity-50',
         selected && 'ring-2 ring-blue-600 ring-offset-2 ring-offset-black',
       )}
@@ -107,7 +107,7 @@ export default function CalendarPage({ today, selectedDate, onSelectDate, locked
             <div className="text-center">
               <p className="text-[15px] font-semibold text-white">{monthLabel}</p>
               <p className="mt-0.5 text-[11px] tabular-nums text-zinc-500">
-                <span className="text-purple-400">{highCount} jours fastes</span> · <span className="text-amber-400">{blockedCount} bloqués</span>
+                <span className="text-purple-400">{highCount} jours fastes</span> · <span className="text-red-400">{blockedCount} bloqués</span>
               </p>
             </div>
             <button
