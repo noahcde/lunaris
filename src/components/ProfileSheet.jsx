@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { CreditCard, LogOut, Pencil, RotateCcw, Sparkles, X } from 'lucide-react'
+import { CreditCard, Download, LogOut, Pencil, RotateCcw, Sparkles, X } from 'lucide-react'
 import { cx, sunSign } from '../lib/astro'
 
 const formatBirth = (profile) => {
@@ -40,7 +40,7 @@ const actionClass = cx(
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600',
 )
 
-export default function ProfileSheet({ open, user, profile, streak, billing, demo, onClose, onEdit, onSubscribe, onManageBilling, onSignOut, onResetDemo }) {
+export default function ProfileSheet({ open, user, profile, streak, billing, demo, onClose, onEdit, onSubscribe, onManageBilling, onSignOut, onResetDemo, notificationSettings, onInstall }) {
   useEffect(() => {
     if (!open) return
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -97,6 +97,8 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
           <Row label="Abonnement" value={billingLabel(billing)} />
         </div>
 
+        {notificationSettings && <div className="mt-5">{notificationSettings}</div>}
+
         <div className="mt-5 flex flex-col gap-2">
           {billing?.status === 'free' ? null : billing?.active ? (
             <button type="button" onClick={onManageBilling} className={cx(actionClass, 'text-white')}>
@@ -107,6 +109,12 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
             <button type="button" onClick={onSubscribe} className={cx(actionClass, 'text-white')}>
               <Sparkles className="h-4 w-4 text-blue-600" />
               {billing?.trialUsed ? 'S’abonner à Lunaris Premium' : 'Essayer Premium · 2 jours offerts'}
+            </button>
+          )}
+          {onInstall && (
+            <button type="button" onClick={onInstall} className={cx(actionClass, 'text-white')}>
+              <Download className="h-4 w-4 text-blue-600" />
+              Ajouter à l’écran d’accueil
             </button>
           )}
           <button type="button" onClick={onEdit} className={cx(actionClass, 'text-white')}>

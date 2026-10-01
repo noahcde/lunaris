@@ -13,6 +13,9 @@ import { bestStreak, currentRun, currentStreak, dayKey } from './lib/streak'
 import { getBackend } from './lib/backend'
 import { loadQuiz, saveQuiz } from './lib/quiz'
 import Logo from './components/Logo'
+import InstallGuide from './components/InstallGuide'
+import NotificationSettings from './components/NotificationSettings'
+import { isStandalone } from './lib/pwa'
 
 const PAGES = ['accueil', 'calendrier']
 
@@ -20,6 +23,8 @@ const TASK_COUNT = 3
 
 // Retour depuis Stripe (paiement ou espace abonnement) : ?abonnement=… dans l'adresse.
 const returningFromStripe = () => new URLSearchParams(window.location.search).has('abonnement')
+// Retour après un paiement réussi : on propose d'installer l'app sur l'écran d'accueil.
+const returningFromPayment = () => new URLSearchParams(window.location.search).get('abonnement') === 'ok'
 
 const pageFromHash = () => {
   const hash = window.location.hash.replace('#', '')
@@ -56,6 +61,8 @@ export default function App() {
   const [billing, setBilling] = useState(null) // état de l'abonnement Stripe
   const [paywallOpen, setPaywallOpen] = useState(false)
   const stripeReturn = useRef(returningFromStripe())
+  const paymentReturn = useRef(returningFromPayment())
+  const [installOpen, setInstallOpen] = useState(false)
 
   // Connexion : on écoute l'état d'authentification puis on charge le document du compte.
   useEffect(() => {
@@ -92,12 +99,15 @@ export default function App() {
   // Relit l'abonnement puis le contenu du jour. refresh force la lecture chez Stripe (retour de paiement).
   const refreshAccess = useCallback(
     async (refresh = false) => {
+      let state = null
       try {
-        setBilling(await backend.getBilling(refresh))
+        state = await backend.getBilling(refresh)
+        setBilling(state)
       } catch {
         // Abonnement illisible : getDaily tranchera côté serveur.
       }
       await loadDaily()
+      return state
     },
     [backend, loadDaily],
   )
@@ -117,7 +127,10 @@ export default function App() {
         // Adresse non modifiable dans certains environnements intégrés.
       }
     }
-    refreshAccess(refresh)
+    refreshAccess(refresh).then((state) => {
+      if (paymentReturn.current && state?.active) offerInstall()
+      paymentReturn.current = false
+    })
   }, [profileReady, user?.uid, refreshAccess])
 
   // L'URL (#accueil, #calendrier) suit la page affichée, et le bouton retour fonctionne.
@@ -208,7 +221,25 @@ export default function App() {
       return
     }
     setPaywallOpen(false)
-    await refreshAccess(true)
+    const state = await refreshAccess(true)
+    if (state?.active) offerInstall()
+  }
+
+  // Guide d'installation sur l'écran d'accueil, inutile si l'app est déjà ouverte depuis l'icône.
+  function offerInstall() {
+    if (!isStandalone()) setInstallOpen(true)
+  }
+
+  // Notifications du matin : réglage enregistré sur le compte, envoi par le serveur à l'heure choisie.
+  const enableNotifications = async (hour) => {
+    const settings = await backend.enableNotifications(user.uid, hour)
+    setData((prev) => ({ ...prev, notifications: { ...prev.notifications, ...settings } }))
+  }
+  const updateNotifications = (partial) => {
+    setData((prev) => ({ ...prev, notifications: { ...prev.notifications, ...partial } }))
+    backend.updateNotifications(user.uid, partial).catch(() => {
+      // Échec réseau : le réglage local reste affiché, il sera renvoyé au prochain changement.
+    })
   }
 
   const manageBilling = async () => {
@@ -269,6 +300,19 @@ export default function App() {
   }
 
   const locked = daily.status === 'locked' || billing?.active === false
+
+  const notificationSettings = backend.notificationsAvailable ? (
+    <NotificationSettings
+      notifications={data.notifications}
+      demo={backend.mode === 'demo'}
+      onEnable={enableNotifications}
+      onUpdate={updateNotifications}
+      onShowGuide={() => {
+        setSheetOpen(false)
+        setInstallOpen(true)
+      }}
+    />
+  ) : null
   const trialAvailable = !billing?.trialUsed
 
   if (!data.birthDate || editingProfile) {
@@ -322,6 +366,15 @@ export default function App() {
         }}
         onSubscribe={openPaywall}
         onManageBilling={manageBilling}
+        notificationSettings={installOpen ? null : notificationSettings}
+        onInstall={
+          isStandalone()
+            ? null
+            : () => {
+                setSheetOpen(false)
+                setInstallOpen(true)
+              }
+        }
         onSignOut={signOut}
         onResetDemo={() => {
           setSheetOpen(false)
@@ -329,6 +382,9 @@ export default function App() {
           backend.resetDemo()
         }}
       />
+      <InstallGuide open={installOpen} onClose={() => setInstallOpen(false)}>
+        {installOpen ? notificationSettings : null}
+      </InstallGuide>
       <Paywall
         open={paywallOpen}
         trialAvailable={trialAvailable}

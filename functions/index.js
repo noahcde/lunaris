@@ -2,8 +2,10 @@
 // - getDaily : horoscope et 3 tâches du jour, réservés aux abonnés. Le résultat est mis en cache dans
 //   users/{uid}/daily/{date} : un seul appel à l'IA par personne et par jour.
 // - getBilling, startCheckout, openBillingPortal : abonnement Stripe (voir billing.js).
+// - morningNotifications : rappel quotidien à l'heure choisie par chacun (voir notify.js), lancé chaque heure.
 import { defineSecret, defineString } from 'firebase-functions/params'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
+import { onSchedule } from 'firebase-functions/v2/scheduler'
 import { logger } from 'firebase-functions'
 import { dayContext, sunSign } from './astro.js'
 
@@ -30,6 +32,8 @@ const STRIPE_SECRET_KEY = defineSecret('STRIPE_SECRET_KEY')
 const OPENAI_MODEL = defineString('OPENAI_MODEL', { default: 'gpt-5.4-mini' })
 // Comptes Google ayant tout l'accès sans abonnement (propriétaires de l'app), séparés par des virgules (functions/.env).
 const FREE_ACCESS_EMAILS = defineString('FREE_ACCESS_EMAILS', { default: '' })
+// Adresse du site ouverte au clic sur une notification (functions/.env).
+const APP_URL = defineString('APP_URL', { default: 'https://horoscope-55ff8.web.app' })
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -163,5 +167,14 @@ export const getDaily = onCall(
       logger.error('Génération du jour impossible', { uid, date, error: String(err) })
       throw new HttpsError('unavailable', 'La génération a échoué. Réessayez dans un instant.')
     }
+  },
+)
+
+export const morningNotifications = onSchedule(
+  { schedule: '0 * * * *', timeZone: 'Europe/Paris', region: 'europe-west1', timeoutSeconds: 300 },
+  async () => {
+    await loadDeps() // initialise Firebase Admin
+    const { sendMorningNotifications } = await import('./notify.js')
+    await sendMorningNotifications({ appUrl: APP_URL.value(), logger })
   },
 )

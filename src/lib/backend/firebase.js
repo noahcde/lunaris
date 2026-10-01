@@ -1,6 +1,7 @@
 // Backend réel : Firebase Authentication (Google) + Cloud Firestore.
 // Document par utilisateur : users/{uid}
-//   { firstName, lastName, birthDate, birthTime, completedDays: string[], today: { date, doneIds }, updatedAt }
+//   { firstName, lastName, birthDate, birthTime, completedDays: string[], today: { date, doneIds },
+//     notifications: { enabled, hour, timeZone, tokens: string[], lastSent }, updatedAt }
 // Horoscope du jour (écrit uniquement par la Cloud Function) : users/{uid}/daily/{date}
 import { initializeApp } from 'firebase/app'
 import {
@@ -13,15 +14,20 @@ import {
   signInWithRedirect,
   signOut as fbSignOut,
 } from 'firebase/auth'
-import { doc, getDoc, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore'
+import { arrayUnion, doc, getDoc, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
+import { getMessaging, getToken, isSupported as messagingSupported } from 'firebase/messaging'
 
-const app = initializeApp({
+const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-})
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+}
+const app = initializeApp(config)
+// Clé publique « Web Push » (console Firebase › Paramètres › Cloud Messaging), nécessaire aux notifications.
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY
 const auth = getAuth(app)
 auth.languageCode = 'fr'
 const db = getFirestore(app)
@@ -106,6 +112,36 @@ export async function startCheckout(plan) {
 export async function openBillingPortal() {
   const { data } = await openBillingPortalFn({})
   return data.url ?? null
+}
+
+// Notifications du matin : autorisation du navigateur, jeton de l'appareil enregistré sur le compte.
+// L'envoi est fait chaque heure par le serveur (functions/notify.js) aux personnes dont c'est l'heure choisie.
+// Erreurs possibles (err.code) : 'unsupported', 'denied'.
+export const notificationsAvailable = Boolean(VAPID_KEY)
+
+export async function enableNotifications(uid, hour) {
+  if (!VAPID_KEY || !(await messagingSupported().catch(() => false))) throw Object.assign(new Error(), { code: 'unsupported' })
+  const permission = await Notification.requestPermission()
+  if (permission !== 'granted') throw Object.assign(new Error(), { code: 'denied' })
+  const params = new URLSearchParams({
+    apiKey: config.apiKey,
+    projectId: config.projectId,
+    appId: config.appId,
+    messagingSenderId: config.messagingSenderId,
+  })
+  const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${params}`)
+  const token = await getToken(getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
+  const settings = { enabled: true, hour, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris' }
+  await setDoc(
+    doc(db, 'users', uid),
+    { notifications: { ...settings, tokens: arrayUnion(token) }, updatedAt: serverTimestamp() },
+    { merge: true },
+  )
+  return settings
+}
+
+export async function updateNotifications(uid, partial) {
+  await setDoc(doc(db, 'users', uid), { notifications: partial, updatedAt: serverTimestamp() }, { merge: true })
 }
 
 export const mode = 'firebase'
