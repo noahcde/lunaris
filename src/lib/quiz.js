@@ -1,6 +1,11 @@
 // Questionnaire d'entrée : ce que la personne cherche en ce moment.
 // Les réponses sont gardées dans ce navigateur jusqu'à la connexion, puis enregistrées sur le compte (users/{uid}.quiz)
 // et transmises à l'IA pour orienter l'horoscope et les tâches.
+// Réponse libre « Autre » : texte tapé par la personne, limité en longueur.
+export const OTHER = 'autre'
+export const OTHER_MAX = 80
+const otherOption = { value: OTHER, label: 'Autre' }
+
 export const QUESTIONS = [
   {
     id: 'focus',
@@ -11,6 +16,7 @@ export const QUESTIONS = [
       { value: 'energie', label: 'Énergie et bien-être' },
       { value: 'voie', label: 'Trouver ma voie' },
       { value: 'confiance', label: 'Confiance en moi' },
+      otherOption,
     ],
   },
   {
@@ -21,6 +27,7 @@ export const QUESTIONS = [
       { value: 'transition', label: 'Je suis en pleine transition' },
       { value: 'stable', label: 'Plutôt stable, mais j’en veux plus' },
       { value: 'deborde', label: 'Je suis débordé·e' },
+      otherOption,
     ],
   },
   {
@@ -31,6 +38,7 @@ export const QUESTIONS = [
       { value: 'timing', label: 'Savoir quand agir' },
       { value: 'actions', label: 'Des actions concrètes chaque jour' },
       { value: 'motivation', label: 'Retrouver de la motivation' },
+      otherOption,
     ],
   },
   {
@@ -44,8 +52,14 @@ export const QUESTIONS = [
   },
 ]
 
-export const labelOf = (questionId, value) =>
-  QUESTIONS.find((q) => q.id === questionId)?.options.find((o) => o.value === value)?.label ?? null
+export const otherKey = (questionId) => `${questionId}Other`
+
+// Libellé d'une réponse : le texte tapé pour « Autre », sinon le libellé de l'option choisie.
+export function answerLabel(answers, questionId) {
+  const value = answers?.[questionId]
+  if (value === OTHER) return answers[otherKey(questionId)]?.trim() || 'Autre'
+  return QUESTIONS.find((q) => q.id === questionId)?.options.find((o) => o.value === value)?.label ?? null
+}
 
 const KEY = 'aligned.quiz'
 

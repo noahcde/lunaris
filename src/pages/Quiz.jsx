@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, ArrowRight, Briefcase, Check, Compass, Heart, Leaf, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Briefcase, Check, Compass, Heart, Leaf, PenLine, Sparkles } from 'lucide-react'
 import ZodiacWheel from '../components/ZodiacWheel'
 import { cx, getMoonPhase, sunSign } from '../lib/astro'
-import { QUESTIONS, labelOf } from '../lib/quiz'
+import { OTHER, OTHER_MAX, QUESTIONS, answerLabel, otherKey } from '../lib/quiz'
 
-const FOCUS_ICONS = { amour: Heart, carriere: Briefcase, energie: Leaf, voie: Compass, confiance: Sparkles }
+const FOCUS_ICONS = { amour: Heart, carriere: Briefcase, energie: Leaf, voie: Compass, confiance: Sparkles, autre: PenLine }
 
 const ANALYSIS_STEPS = [
   'Calcul de votre signe solaire',
@@ -99,8 +99,8 @@ function Result({ answers, onContinue }) {
   const moon = getMoonPhase(new Date())
   const rows = [
     ['Signe solaire', sign],
-    ['Votre priorité', labelOf('focus', answers.focus)],
-    ['Votre période', labelOf('period', answers.period)],
+    ['Votre priorité', answerLabel(answers, 'focus')],
+    ['Votre période', answerLabel(answers, 'period')],
     ['Lune du jour', moon.name],
   ]
   return (
@@ -147,8 +147,11 @@ export default function Quiz({ initial, onBack, onComplete }) {
   const question = QUESTIONS[step]
   const choose = (value) => {
     setAnswers((a) => ({ ...a, [question.id]: value }))
-    setTimeout(() => setStep((s) => s + 1), 250)
+    // « Autre » attend le texte libre : on ne passe pas tout de suite à la question suivante.
+    if (value !== OTHER) setTimeout(() => setStep((s) => s + 1), 250)
   }
+  const otherText = question ? (answers[otherKey(question.id)] ?? '') : ''
+  const otherSelected = question && answers[question.id] === OTHER
   const sign = sunSign(answers.birthDate)
 
   return (
@@ -194,6 +197,36 @@ export default function Quiz({ initial, onBack, onComplete }) {
               />
             ))}
           </div>
+          {otherSelected && (
+            <form
+              className="mt-4 animate-page-in"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (otherText.trim()) setStep((s) => s + 1)
+              }}
+            >
+              <label htmlFor="other" className="block text-xs font-medium text-zinc-400">
+                Précisez en quelques mots
+              </label>
+              <input
+                id="other"
+                type="text"
+                autoFocus
+                maxLength={OTHER_MAX}
+                value={otherText}
+                onChange={(e) => setAnswers((a) => ({ ...a, [otherKey(question.id)]: e.target.value }))}
+                className="mt-1.5 w-full rounded-xl border border-zinc-900 bg-zinc-950 px-4 py-3.5 text-[15px] text-white placeholder:text-zinc-600 transition-all duration-300 ease-in-out focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                placeholder="Votre réponse"
+              />
+              <p className="mt-1.5 text-right text-[11px] tabular-nums text-zinc-500">
+                {otherText.length}/{OTHER_MAX}
+              </p>
+              <button type="submit" disabled={!otherText.trim()} className={cx(primaryButton, 'mt-3')}>
+                Continuer
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+          )}
         </div>
       ) : (
         <form

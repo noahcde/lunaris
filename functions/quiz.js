@@ -1,5 +1,6 @@
 // Copie serveur des réponses possibles au questionnaire d'entrée (src/lib/quiz.js).
-// Seules ces valeurs connues sont transmises à l'IA : aucun texte libre de l'utilisateur n'entre dans le prompt.
+// Les valeurs connues sont traduites en libellés. La réponse libre « Autre » est nettoyée, limitée à 80 caractères
+// et présentée à l'IA entre guillemets comme une simple description de la personne.
 const LABELS = {
   focus: {
     label: 'Ce qui l’occupe le plus en ce moment',
@@ -35,9 +36,24 @@ const LABELS = {
   },
 }
 
+const OTHER_MAX = 80
+
+const cleanFreeText = (text) =>
+  typeof text === 'string'
+    ? text
+        .replace(/[\u0000-\u001f\u007f«»"]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, OTHER_MAX)
+    : ''
+
 export function quizLines(quiz) {
   if (!quiz || typeof quiz !== 'object') return []
   return Object.entries(LABELS).flatMap(([id, { label, values }]) => {
+    if (quiz[id] === 'autre') {
+      const text = cleanFreeText(quiz[`${id}Other`])
+      return text ? [`${label} (réponse libre) : « ${text} »`] : []
+    }
     const value = Object.hasOwn(values, quiz[id]) ? values[quiz[id]] : null
     return value ? [`${label} : ${value}`] : []
   })
