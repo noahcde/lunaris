@@ -44,3 +44,16 @@ La clé API OpenAI ne doit jamais être dans l'app (elle serait visible par tous
 Fonctionnement : à la première ouverture de la journée, la fonction lit le profil (signe solaire, heure de naissance), la phase lunaire et le statut du jour, demande au modèle OpenAI un horoscope et 3 tâches au format JSON validé, puis met le résultat en cache dans `users/{uid}/daily/{date}`. Il y a donc au plus un appel à l'IA par utilisateur et par jour. Le texte du prompt est dans `functions/daily.js`.
 
 Le modèle est `gpt-5.4-mini` par défaut. Pour en changer sans modifier le code, créez `functions/.env` avec une ligne `OPENAI_MODEL=nom-du-modele`, puis redéployez.
+
+## Abonnement (Stripe)
+
+L'horoscope, les tâches et le détail des jours sont réservés aux abonnés : 6,99 €/mois ou 49,99 €/an,
+avec 2 jours offerts une seule fois par compte (carte demandée, aucun débit pendant l'essai).
+Sans abonnement, le serveur ne renvoie aucun contenu et l'app affiche des textes floutés.
+
+- `functions/billing.js` : paiement Stripe Checkout, espace abonné (Customer Portal) et lecture de l'abonnement.
+  Les deux tarifs sont créés automatiquement chez Stripe au premier achat (clés `aligned_premium_monthly` et `aligned_premium_yearly`).
+- L'état de l'abonnement est relu chez Stripe au plus toutes les 15 minutes, et immédiatement au retour du paiement.
+  Il est gardé dans `billing/{uid}`, inaccessible depuis l'app.
+- Configuration : la clé secrète Stripe est un secret Firebase (`npx firebase-tools@latest functions:secrets:set STRIPE_SECRET_KEY`),
+  et l'espace abonné doit être activé une fois dans Stripe (Paramètres › Billing › Customer portal).

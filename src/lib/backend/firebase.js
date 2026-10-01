@@ -25,7 +25,11 @@ const app = initializeApp({
 const auth = getAuth(app)
 auth.languageCode = 'fr'
 const db = getFirestore(app)
-const getDailyFn = httpsCallable(getFunctions(app, 'europe-west1'), 'getDaily', { timeout: 120000 })
+const functions = getFunctions(app, 'europe-west1')
+const getDailyFn = httpsCallable(functions, 'getDaily', { timeout: 120000 })
+const getBillingFn = httpsCallable(functions, 'getBilling')
+const startCheckoutFn = httpsCallable(functions, 'startCheckout')
+const openBillingPortalFn = httpsCallable(functions, 'openBillingPortal')
 
 // Prénom et nom fournis par Google lors de la connexion, gardés pour pré-remplir le profil.
 let googleNames = null
@@ -80,9 +84,28 @@ export async function saveUserData(uid, partial) {
 }
 
 // Horoscope et 3 tâches du jour, générés par l'IA côté serveur (functions/index.js).
+// Sans abonnement, le serveur renvoie { locked: true } sans aucun contenu.
 export async function getDaily(date) {
   const { data } = await getDailyFn({ date })
   return data
+}
+
+// Abonnement Stripe (functions/billing.js). refresh force une relecture chez Stripe, par exemple au retour du paiement.
+export async function getBilling(refresh = false) {
+  const { data } = await getBillingFn({ refresh })
+  return data
+}
+
+// Renvoie l'adresse de la page de paiement Stripe, ou null si l'abonnement est déjà actif.
+export async function startCheckout(plan) {
+  const { data } = await startCheckoutFn({ plan })
+  return data.url ?? null
+}
+
+// Renvoie l'adresse de l'espace Stripe où l'abonné gère ou résilie son abonnement.
+export async function openBillingPortal() {
+  const { data } = await openBillingPortalFn({})
+  return data.url ?? null
 }
 
 export const mode = 'firebase'

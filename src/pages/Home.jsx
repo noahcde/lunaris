@@ -4,6 +4,7 @@ import DayDetail from '../components/DayDetail'
 import StreakCard from '../components/StreakCard'
 import { Avatar } from '../components/ProfileSheet'
 import Legend from '../components/Legend'
+import { LOCKED_TEXT, UnlockButton } from '../components/Paywall'
 import { addDays, capitalize, cx, getDayInfo, getMoonPhase, isSameDay, sunSign } from '../lib/astro'
 
 /* ------------------------------------------------------------------ */
@@ -72,7 +73,18 @@ function Skeleton({ className }) {
   return <span className={cx('block animate-pulse rounded-md bg-zinc-900', className)} />
 }
 
-function CosmicInsight({ daily, sign, onRetry }) {
+// Textes d'attente affichés floutés : le vrai contenu n'est jamais envoyé sans abonnement.
+const LOCKED_INSIGHT = {
+  title: 'Une journée propice aux décisions claires.',
+  text: 'Le ciel du jour éclaire vos priorités et met en lumière une énergie à canaliser. Votre signe trouve un appui inattendu dans les échanges de l’après-midi.',
+}
+const LOCKED_TASKS = [
+  { title: 'Clarifier une priorité du jour', hint: 'Le ciel soutient votre concentration.' },
+  { title: 'Reprendre contact avec un proche', hint: 'Les échanges sont favorisés.' },
+  { title: 'Prendre dix minutes de recul', hint: 'La Lune invite à ralentir.' },
+]
+
+function CosmicInsight({ daily, sign, onRetry, trialAvailable, onUnlock }) {
   return (
     <section className="rounded-2xl border border-zinc-900 bg-zinc-950 p-5" aria-busy={daily.status === 'loading'}>
       <div className="flex items-center justify-between gap-3">
@@ -93,6 +105,19 @@ function CosmicInsight({ daily, sign, onRetry }) {
           <h2 className="mt-3 text-[17px] font-semibold leading-snug text-white">{daily.insight.title}</h2>
           <p className="mt-2 text-sm leading-relaxed text-zinc-400">{daily.insight.text}</p>
         </>
+      )}
+
+      {daily.status === 'locked' && (
+        <div className="relative">
+          <div aria-hidden="true" className={LOCKED_TEXT}>
+            <h2 className="mt-3 text-[17px] font-semibold leading-snug text-white">{LOCKED_INSIGHT.title}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-400">{LOCKED_INSIGHT.text}</p>
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
+            <p className="text-sm font-medium text-white">Votre horoscope du jour vous attend.</p>
+            <UnlockButton trialAvailable={trialAvailable} onClick={onUnlock} />
+          </div>
+        </div>
       )}
 
       {(daily.status === 'loading' || daily.status === 'idle') && (
@@ -184,7 +209,19 @@ function TaskItem({ task, onToggle }) {
   )
 }
 
-function AlignmentTasks({ tasks, onToggle, loading }) {
+function LockedTask({ task }) {
+  return (
+    <li className="flex items-center gap-3.5 rounded-xl border border-zinc-900 bg-zinc-950 px-4 py-3.5">
+      <span className="h-[22px] w-[22px] shrink-0 rounded-full border border-zinc-800" />
+      <span aria-hidden="true" className={cx('min-w-0 flex-1', LOCKED_TEXT)}>
+        <span className="block text-[15px] font-medium text-white">{task.title}</span>
+        <span className="mt-0.5 block text-xs text-zinc-400">{task.hint}</span>
+      </span>
+    </li>
+  )
+}
+
+function AlignmentTasks({ tasks, onToggle, loading, locked }) {
   const total = 3
   const doneCount = tasks.filter((t) => t.done).length
   const progress = Math.round((doneCount / total) * 100)
@@ -216,7 +253,9 @@ function AlignmentTasks({ tasks, onToggle, loading }) {
       </div>
 
       <ul className="mt-4 flex flex-col gap-2.5">
-        {loading
+        {locked
+          ? LOCKED_TASKS.map((task) => <LockedTask key={task.title} task={task} />)
+          : loading
           ? [0, 1, 2].map((i) => (
               <li
                 key={i}
@@ -269,7 +308,7 @@ function DayCell({ date, info, selected, onSelect }) {
   )
 }
 
-function ManifestationStrip({ today, selectedDate, onSelectDate, onOpenCalendar }) {
+function ManifestationStrip({ today, selectedDate, onSelectDate, onOpenCalendar, locked }) {
   const days = useMemo(
     () => [1, 2, 3, 4, 5].map((i) => addDays(today, i)).map((date) => ({ date, info: getDayInfo(date) })),
     [today],
@@ -305,7 +344,7 @@ function ManifestationStrip({ today, selectedDate, onSelectDate, onOpenCalendar 
       </div>
 
       <div className="mt-4">
-        <DayDetail date={selected.date} info={selected.info} />
+        <DayDetail date={selected.date} info={selected.info} locked={locked} />
       </div>
       <div className="mt-3">
         <Legend />
@@ -318,12 +357,18 @@ function ManifestationStrip({ today, selectedDate, onSelectDate, onOpenCalendar 
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 
-export default function Home({ today, user, profile, onOpenProfile, daily, onRetryDaily, tasks, onToggleTask, streak, selectedDate, onSelectDate, onOpenCalendar }) {
+export default function Home({ today, user, profile, onOpenProfile, daily, onRetryDaily, tasks, onToggleTask, streak, selectedDate, onSelectDate, onOpenCalendar, locked, trialAvailable, onUnlock }) {
   return (
     <>
       <Header today={today} energy={72} user={user} profile={profile} onOpenProfile={onOpenProfile} />
-      <CosmicInsight daily={daily} sign={sunSign(profile.birthDate)} onRetry={onRetryDaily} />
-      <AlignmentTasks tasks={tasks} onToggle={onToggleTask} loading={daily.status !== 'ready'} />
+      <CosmicInsight
+        daily={daily}
+        sign={sunSign(profile.birthDate)}
+        onRetry={onRetryDaily}
+        trialAvailable={trialAvailable}
+        onUnlock={onUnlock}
+      />
+      <AlignmentTasks tasks={tasks} onToggle={onToggleTask} loading={daily.status !== 'ready'} locked={locked} />
       <StreakCard
         today={today}
         completed={streak.completed}
@@ -336,6 +381,7 @@ export default function Home({ today, user, profile, onOpenProfile, daily, onRet
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
         onOpenCalendar={onOpenCalendar}
+        locked={locked}
       />
     </>
   )

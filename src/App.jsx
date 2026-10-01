@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import BottomNav from './components/BottomNav'
+import Paywall from './components/Paywall'
 import ProfileSheet from './components/ProfileSheet'
 import Home from './pages/Home'
 import CalendarPage from './pages/CalendarPage'
@@ -12,6 +13,9 @@ import { getBackend } from './lib/backend'
 const PAGES = ['accueil', 'calendrier']
 
 const TASK_COUNT = 3
+
+// Retour depuis Stripe (paiement ou espace abonnement) : ?abonnement=… dans l'adresse.
+const returningFromStripe = () => new URLSearchParams(window.location.search).has('abonnement')
 
 const pageFromHash = () => {
   const hash = window.location.hash.replace('#', '')
@@ -45,6 +49,9 @@ export default function App() {
   const [page, setPage] = useState(pageFromHash)
   const [selectedDate, setSelectedDate] = useState(() => addDays(today, 1))
   const [daily, setDaily] = useState({ status: 'idle' }) // horoscope et tâches générés par l'IA
+  const [billing, setBilling] = useState(null) // état de l'abonnement Stripe
+  const [paywallOpen, setPaywallOpen] = useState(false)
+  const stripeReturn = useRef(returningFromStripe())
 
   // Connexion : on écoute l'état d'authentification puis on charge le document du compte.
   useEffect(() => {
@@ -66,21 +73,48 @@ export default function App() {
   }, [])
 
   // Horoscope et tâches du jour : générés une fois par jour côté serveur, puis relus depuis le cache.
+  // Sans abonnement, le serveur ne renvoie rien et l'app affiche des textes floutés.
   const profileReady = Boolean(user && data?.birthDate)
   const loadDaily = useCallback(async () => {
     setDaily({ status: 'loading' })
     try {
       const result = await backend.getDaily(todayKey)
-      setDaily({ status: 'ready', ...result })
+      setDaily(result.locked ? { status: 'locked' } : { status: 'ready', ...result })
     } catch {
       setDaily({ status: 'error' })
     }
   }, [backend, todayKey])
 
+  // Relit l'abonnement puis le contenu du jour. refresh force la lecture chez Stripe (retour de paiement).
+  const refreshAccess = useCallback(
+    async (refresh = false) => {
+      try {
+        setBilling(await backend.getBilling(refresh))
+      } catch {
+        // Abonnement illisible : getDaily tranchera côté serveur.
+      }
+      await loadDaily()
+    },
+    [backend, loadDaily],
+  )
+
   useEffect(() => {
-    if (profileReady) loadDaily()
-    else setDaily({ status: 'idle' })
-  }, [profileReady, user?.uid, loadDaily])
+    if (!profileReady) {
+      setDaily({ status: 'idle' })
+      setBilling(null)
+      return
+    }
+    const refresh = stripeReturn.current
+    if (refresh) {
+      stripeReturn.current = false
+      try {
+        window.history.replaceState(null, '', `${window.location.pathname}${window.location.hash}`)
+      } catch {
+        // Adresse non modifiable dans certains environnements intégrés.
+      }
+    }
+    refreshAccess(refresh)
+  }, [profileReady, user?.uid, refreshAccess])
 
   // L'URL (#accueil, #calendrier) suit la page affichée, et le bouton retour fonctionne.
   useEffect(() => {
@@ -147,6 +181,32 @@ export default function App() {
     setEditingProfile(false)
   }
 
+  // Paiement : redirection vers Stripe. Dans la démo, l'essai démarre directement (pas d'adresse renvoyée).
+  const subscribe = async (plan) => {
+    const url = await backend.startCheckout(plan)
+    if (url) {
+      window.location.assign(url)
+      return
+    }
+    setPaywallOpen(false)
+    await refreshAccess(true)
+  }
+
+  const manageBilling = async () => {
+    const url = await backend.openBillingPortal().catch(() => null)
+    if (url) {
+      window.location.assign(url)
+      return
+    }
+    setSheetOpen(false)
+    await refreshAccess(true)
+  }
+
+  const openPaywall = () => {
+    setSheetOpen(false)
+    setPaywallOpen(true)
+  }
+
   const signOut = async () => {
     setSheetOpen(false)
     await backend.signOut()
@@ -168,6 +228,9 @@ export default function App() {
     birthTime: data.birthTime,
     birthTimeUnknown: data.birthTimeUnknown,
   }
+
+  const locked = daily.status === 'locked' || billing?.active === false
+  const trialAvailable = !billing?.trialUsed
 
   if (!data.birthDate || editingProfile) {
     return shell(
@@ -197,9 +260,12 @@ export default function App() {
             selectedDate={selectedDate}
             onSelectDate={setSelectedDate}
             onOpenCalendar={openCalendar}
+            locked={locked}
+            trialAvailable={trialAvailable}
+            onUnlock={openPaywall}
           />
         ) : (
-          <CalendarPage today={today} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+          <CalendarPage today={today} selectedDate={selectedDate} onSelectDate={setSelectedDate} locked={locked} />
         )}
       </main>
       <BottomNav active={page} onNavigate={navigate} />
@@ -208,17 +274,26 @@ export default function App() {
         user={user}
         profile={profile}
         streak={streak}
+        billing={billing}
         demo={backend.mode === 'demo'}
         onClose={() => setSheetOpen(false)}
         onEdit={() => {
           setSheetOpen(false)
           setEditingProfile(true)
         }}
+        onSubscribe={openPaywall}
+        onManageBilling={manageBilling}
         onSignOut={signOut}
         onResetDemo={() => {
           setSheetOpen(false)
           backend.resetDemo()
         }}
+      />
+      <Paywall
+        open={paywallOpen}
+        trialAvailable={trialAvailable}
+        onClose={() => setPaywallOpen(false)}
+        onSubscribe={subscribe}
       />
     </div>
   )

@@ -108,6 +108,7 @@ const SAMPLES = [
 
 export async function getDaily(date) {
   await new Promise((r) => setTimeout(r, 900))
+  if (!billingState().active) return { date, locked: true }
   const sign = sunSign(memory.data?.birthDate) ?? 'votre signe'
   const sample = SAMPLES[Number(date.slice(-2)) % SAMPLES.length]
   return {
@@ -115,6 +116,50 @@ export async function getDaily(date) {
     insight: { ...sample.insight, text: sample.insight.text.replace('Votre signe', `Le ${sign}`) },
     tasks: sample.tasks,
   }
+}
+
+// Abonnement simulé : aucun paiement, l'essai de 2 jours démarre directement.
+const NO_SUBSCRIPTION = {
+  active: false,
+  status: null,
+  plan: null,
+  trialEnd: null,
+  periodEnd: null,
+  cancelAtPeriodEnd: false,
+  trialUsed: false,
+  hasCustomer: false,
+}
+const billingState = () => memory.data?.billing ?? NO_SUBSCRIPTION
+
+export async function getBilling() {
+  await new Promise((r) => setTimeout(r, 300))
+  return billingState()
+}
+
+export async function startCheckout(plan) {
+  await new Promise((r) => setTimeout(r, 800))
+  const now = Math.floor(Date.now() / 1000)
+  const trial = !billingState().trialUsed
+  const periodEnd = trial ? now + 2 * 86400 : now + (plan === 'yearly' ? 365 : 30) * 86400
+  await saveUserData(null, {
+    billing: {
+      active: true,
+      status: trial ? 'trialing' : 'active',
+      plan,
+      trialEnd: trial ? periodEnd : null,
+      periodEnd,
+      cancelAtPeriodEnd: false,
+      trialUsed: true,
+      hasCustomer: true,
+    },
+  })
+  return null
+}
+
+// Dans la démo, « Gérer mon abonnement » résilie tout de suite, pour revoir l'écran flouté.
+export async function openBillingPortal() {
+  await saveUserData(null, { billing: { ...NO_SUBSCRIPTION, trialUsed: true, hasCustomer: true } })
+  return null
 }
 
 export const mode = 'demo'

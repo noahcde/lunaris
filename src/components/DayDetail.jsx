@@ -1,8 +1,9 @@
 import { Moon, Zap } from 'lucide-react'
 import { STATUS_LABELS, cx, longDate } from '../lib/astro'
+import { LOCKED_TEXT } from './Paywall'
 
 // Carte de détail d'un jour, partagée par l'accueil et le calendrier.
-export default function DayDetail({ date, info }) {
+export default function DayDetail({ date, info, locked = false }) {
   return (
     <div className="rounded-xl border border-zinc-900 bg-zinc-950 px-4 py-3.5">
       <div className="flex items-center justify-between gap-3">
@@ -18,7 +19,9 @@ export default function DayDetail({ date, info }) {
           {STATUS_LABELS[info.status]}
         </span>
       </div>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-400">{info.note}</p>
+      <p aria-hidden={locked} className={cx('mt-1.5 text-[13px] leading-relaxed text-zinc-400', locked && LOCKED_TEXT)}>
+        {info.note}
+      </p>
       <div className="mt-3 flex items-center gap-4 text-xs text-zinc-500">
         <span className="flex items-center gap-1.5">
           <Moon className="h-3.5 w-3.5" strokeWidth={2} />

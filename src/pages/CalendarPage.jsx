@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import DayDetail from '../components/DayDetail'
+import { LOCKED_TEXT } from '../components/Paywall'
 import Legend from '../components/Legend'
 import { addDays, capitalize, cx, getDayInfo, isSameDay } from '../lib/astro'
 
@@ -54,7 +55,7 @@ function MonthCell({ cell, today, selected, onSelect }) {
   )
 }
 
-function UpcomingWindows({ today, onPick }) {
+function UpcomingWindows({ today, onPick, locked }) {
   const windows = useMemo(() => {
     const found = []
     for (let i = 1; found.length < 3 && i < 90; i++) {
@@ -93,7 +94,12 @@ function UpcomingWindows({ today, onPick }) {
                 <span className="block text-sm font-medium text-white">
                   {capitalize(date.toLocaleDateString('fr-FR', { weekday: 'long' }))}
                 </span>
-                <span className="mt-0.5 block text-xs leading-snug text-zinc-400">{info.note}</span>
+                <span
+                  aria-hidden={locked}
+                  className={cx('mt-0.5 block text-xs leading-snug text-zinc-400', locked && LOCKED_TEXT)}
+                >
+                  {info.note}
+                </span>
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all duration-300 ease-in-out group-hover:text-zinc-400" />
             </button>
@@ -104,7 +110,7 @@ function UpcomingWindows({ today, onPick }) {
   )
 }
 
-export default function CalendarPage({ today, selectedDate, onSelectDate }) {
+export default function CalendarPage({ today, selectedDate, onSelectDate, locked }) {
   const [view, setView] = useState({ year: selectedDate.getFullYear(), month: selectedDate.getMonth() })
 
   const cells = useMemo(() => buildMonth(view.year, view.month), [view])
@@ -203,9 +209,9 @@ export default function CalendarPage({ today, selectedDate, onSelectDate }) {
         </div>
       </section>
 
-      <DayDetail date={selectedDate} info={selectedInfo} />
+      <DayDetail date={selectedDate} info={selectedInfo} locked={locked} />
 
-      <UpcomingWindows today={today} onPick={pick} />
+      <UpcomingWindows today={today} onPick={pick} locked={locked} />
     </>
   )
 }
