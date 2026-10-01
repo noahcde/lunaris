@@ -54,6 +54,6 @@ Sans abonnement, le serveur ne renvoie aucun contenu et l'app affiche des textes
 - `functions/billing.js` : paiement Stripe Checkout, espace abonné (Customer Portal) et lecture de l'abonnement.
   Les deux tarifs sont créés automatiquement chez Stripe au premier achat (clés `aligned_premium_monthly` et `aligned_premium_yearly`).
 - L'état de l'abonnement est relu chez Stripe au plus toutes les 15 minutes, et immédiatement au retour du paiement.
-  Il est gardé dans `billing/{uid}`, inaccessible depuis l'app.
+  Il est gardé dans `billing/{uid}` (ou `billing_test/{uid}` avec une clé de test), inaccessible depuis l'app.
 - Configuration : la clé secrète Stripe est un secret Firebase (`npx firebase-tools@latest functions:secrets:set STRIPE_SECRET_KEY`),
   et l'espace abonné doit être activé une fois dans Stripe (Paramètres › Billing › Customer portal).

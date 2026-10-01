@@ -1,6 +1,7 @@
 // Abonnement Stripe : 6,99 €/mois ou 49,99 €/an, 2 jours offerts une seule fois (carte requise).
 // L'état de l'abonnement est lu directement chez Stripe, puis gardé 15 minutes dans billing/{uid}
 // (collection inaccessible depuis l'app : seul ce code serveur la lit et l'écrit).
+// En mode test (clé sk_test_), les données vont dans billing_test/{uid} : passer en réel repart de zéro proprement.
 import Stripe from 'stripe'
 import { getFirestore } from 'firebase-admin/firestore'
 
@@ -15,7 +16,10 @@ const CACHE_MS = 15 * 60 * 1000
 
 let stripe = null
 const getStripe = () => (stripe ??= new Stripe(process.env.STRIPE_SECRET_KEY))
-const billingRef = (uid) => getFirestore().doc(`billing/${uid}`)
+const billingRef = (uid) => {
+  const live = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_') || process.env.STRIPE_SECRET_KEY?.startsWith('rk_live_')
+  return getFirestore().doc(`${live ? 'billing' : 'billing_test'}/${uid}`)
+}
 
 export const isPlan = (plan) => Object.hasOwn(PLANS, plan)
 
