@@ -4,6 +4,7 @@ import DayDetail from '../components/DayDetail'
 import StreakCard from '../components/StreakCard'
 import { Avatar } from '../components/ProfileSheet'
 import Legend from '../components/Legend'
+import UpcomingWindows from '../components/UpcomingWindows'
 import { LOCKED_TEXT, UnlockButton } from '../components/Paywall'
 import { addDays, capitalize, cx, getDayInfo, getMoonPhase, isSameDay, sunSign } from '../lib/astro'
 
@@ -389,6 +390,15 @@ export default function Home({ today, user, profile, onOpenProfile, daily, onRet
             locked={locked}
           />
         </div>
+      </div>
+      {/* Sur ordinateur, la place restante montre les prochains jours favorables. */}
+      <div className="mt-8 hidden lg:block">
+        <UpcomingWindows
+          today={today}
+          onPick={onOpenCalendar}
+          locked={locked}
+          listClassName="grid grid-cols-3 gap-3"
+        />
       </div>
     </>
   )

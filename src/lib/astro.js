@@ -15,14 +15,39 @@ const MOON_NAMES = [
   'Dernier croissant',
 ]
 
-export function getMoonPhase(date) {
-  // Phase évaluée à midi pour qu'un même jour donne toujours le même résultat.
+// Âge de la Lune (en jours depuis la dernière nouvelle lune), évalué à midi
+// pour qu'un même jour donne toujours le même résultat.
+function moonAge(date) {
   const noon = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12)
   const days = (noon - KNOWN_NEW_MOON) / DAY_MS
-  const age = ((days % SYNODIC_MONTH) + SYNODIC_MONTH) % SYNODIC_MONTH
+  return ((days % SYNODIC_MONTH) + SYNODIC_MONTH) % SYNODIC_MONTH
+}
+
+export function getMoonPhase(date) {
+  const age = moonAge(date)
   const illumination = Math.round(((1 - Math.cos((2 * Math.PI * age) / SYNODIC_MONTH)) / 2) * 100)
   const index = Math.round((age / SYNODIC_MONTH) * 8) % 8
   return { name: MOON_NAMES[index], index, illumination }
+}
+
+// Les quatre grandes phases (nouvelle lune, premier quartier, pleine lune, dernier quartier)
+// qui tombent entre `from` et `from + days`, avec le jour le plus proche du moment exact.
+export function moonEvents(from, days) {
+  const events = []
+  for (let i = 0; i < days; i++) {
+    const date = addDays(from, i)
+    const age = moonAge(date)
+    const next = age + 1
+    for (let q = 0; q < 4; q++) {
+      const target = (q * SYNODIC_MONTH) / 4
+      const t = q === 0 && next >= SYNODIC_MONTH ? SYNODIC_MONTH : target
+      if (age <= t && next > t) {
+        const pick = t - age <= 0.5 ? date : addDays(date, 1)
+        if (pick < addDays(from, days)) events.push({ date: pick, quarter: q, name: MOON_NAMES[q * 2] })
+      }
+    }
+  }
+  return events
 }
 
 const HIGH_NOTES = [
