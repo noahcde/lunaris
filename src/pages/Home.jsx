@@ -22,7 +22,7 @@ function Header({ today, energy, user, profile, onOpenProfile }) {
   return (
     <header className="flex items-start justify-between pt-8">
       <div>
-        <Logo as="h1" className="text-[28px]" />
+        <Logo as="h1" />
         <p className="mt-2 text-[13px] text-zinc-400">{dateLabel}</p>
         <p className="mt-0.5 flex items-center gap-1.5 whitespace-nowrap text-xs text-zinc-500">
           <Moon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />

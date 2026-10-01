@@ -32,7 +32,7 @@ export const QUESTIONS = [
   },
   {
     id: 'expectation',
-    title: 'Qu’attendez-vous d’Aligned ?',
+    title: 'Qu’attendez-vous de Lunaris ?',
     options: [
       { value: 'comprendre', label: 'Comprendre ce que je traverse' },
       { value: 'timing', label: 'Savoir quand agir' },

@@ -109,7 +109,7 @@ export default function Paywall({ open, trialAvailable, onClose, onSubscribe }) 
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Abonnement Aligned"
+        aria-label="Abonnement Lunaris"
         className={cx(
           'absolute inset-x-0 bottom-0 mx-auto max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-b-0 border-zinc-900 bg-zinc-950 px-5 pt-5',
           'transition-all duration-300 ease-in-out',
@@ -123,7 +123,7 @@ export default function Paywall({ open, trialAvailable, onClose, onSubscribe }) 
           <div>
             <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
               <Sparkles className="h-4 w-4 text-purple-500 drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]" strokeWidth={2} />
-              Aligned Premium
+              Lunaris Premium
             </p>
             <h2 className="mt-2 text-xl font-bold tracking-tight text-white">
               {trialAvailable ? 'Essayez 2 jours offerts' : 'Débloquez votre ciel'}

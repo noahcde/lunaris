@@ -13,6 +13,7 @@ export default {
         'page-in': 'page-in 300ms ease-in-out',
       },
       fontFamily: {
+        logo: ['Newsreader', 'Georgia', 'serif'],
         sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
       },
     },

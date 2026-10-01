@@ -106,7 +106,7 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
           ) : (
             <button type="button" onClick={onSubscribe} className={cx(actionClass, 'text-white')}>
               <Sparkles className="h-4 w-4 text-blue-600" />
-              {billing?.trialUsed ? 'S’abonner à Aligned Premium' : 'Essayer Premium · 2 jours offerts'}
+              {billing?.trialUsed ? 'S’abonner à Lunaris Premium' : 'Essayer Premium · 2 jours offerts'}
             </button>
           )}
           <button type="button" onClick={onEdit} className={cx(actionClass, 'text-white')}>

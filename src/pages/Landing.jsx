@@ -170,7 +170,7 @@ export default function Landing({ onStart, onSignIn, demo }) {
             Votre ciel du jour, transformé en actions concrètes.
           </h1>
           <p className="mt-4 text-[15px] leading-relaxed text-zinc-400 lg:text-lg">
-            Aligned lit votre signe, la Lune et le climat astral du jour pour vous donner chaque matin un horoscope
+            Lunaris lit votre signe, la Lune et le climat astral du jour pour vous donner chaque matin un horoscope
             personnel et trois actions simples à accomplir.
           </p>
           <DesktopStart onStart={onStart} className="mt-8" />
