@@ -9,7 +9,7 @@ import Login from './pages/Login'
 import Quiz from './pages/Quiz'
 import Onboarding from './pages/Onboarding'
 import { addDays } from './lib/astro'
-import { bestStreak, currentStreak, dayKey } from './lib/streak'
+import { bestStreak, currentRun, currentStreak, dayKey } from './lib/streak'
 import { getBackend } from './lib/backend'
 import { loadQuiz, saveQuiz } from './lib/quiz'
 import Logo from './components/Logo'
@@ -146,6 +146,7 @@ export default function App() {
     return {
       completed: set,
       current: currentStreak(set, today),
+      run: currentRun(set, today),
       best: bestStreak(set),
       remaining: TASK_COUNT - doneIds.length,
     }

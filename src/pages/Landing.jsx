@@ -83,7 +83,7 @@ function AppPreview() {
               'flex h-10 flex-1 items-center justify-center rounded-lg border text-[11px] font-semibold tabular-nums',
               s === 'high' && 'border-purple-500 text-white shadow-[0_4px_10px_-6px_rgba(168,85,247,0.9)]',
               s === 'normal' && 'border-zinc-800 text-zinc-400',
-              s === 'blocked' && 'border-zinc-900 text-zinc-600 opacity-40',
+              s === 'blocked' && 'border-amber-500/50 bg-amber-500/[0.08] text-amber-300',
             )}
           >
             {12 + i}

@@ -13,7 +13,7 @@ export default function DayDetail({ date, info, locked = false }) {
             'shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]',
             info.status === 'high' && 'border-purple-500/40 bg-purple-500/10 text-purple-300',
             info.status === 'normal' && 'border-zinc-800 text-zinc-400',
-            info.status === 'blocked' && 'border-zinc-900 text-zinc-600',
+            info.status === 'blocked' && 'border-amber-500/40 bg-amber-500/10 text-amber-300',
           )}
         >
           {STATUS_LABELS[info.status]}

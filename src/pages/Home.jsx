@@ -293,9 +293,9 @@ function DayCell({ date, info, selected, onSelect }) {
         status === 'normal' && 'border-zinc-800 bg-zinc-950 text-zinc-400',
         status === 'high' &&
           'border-purple-500 bg-zinc-950 text-white shadow-[0_6px_14px_-8px_rgba(168,85,247,0.9)]',
-        status === 'blocked' && 'border-zinc-900 bg-black text-zinc-600 opacity-40',
+        status === 'blocked' && 'border-amber-500/50 bg-amber-500/[0.08] text-amber-300',
         selected && status === 'normal' && 'border-zinc-600',
-        selected && status === 'blocked' && 'opacity-70',
+        selected && status === 'blocked' && 'bg-amber-500/[0.14]',
         selected && status === 'high' && 'bg-purple-500/[0.08]',
       )}
     >
@@ -378,6 +378,7 @@ export default function Home({ today, user, profile, onOpenProfile, daily, onRet
             today={today}
             completed={streak.completed}
             streak={streak.current}
+            run={streak.run}
             best={streak.best}
             remaining={streak.remaining}
           />

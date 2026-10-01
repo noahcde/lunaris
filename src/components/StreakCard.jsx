@@ -4,7 +4,7 @@ import { dayKey } from '../lib/streak'
 
 const DAYS_SHOWN = 14
 
-export default function StreakCard({ today, completed, streak, best, remaining }) {
+export default function StreakCard({ today, completed, streak, run, best, remaining }) {
   const todayDone = remaining === 0
   const days = Array.from({ length: DAYS_SHOWN }, (_, i) => addDays(today, i - DAYS_SHOWN + 1))
 
@@ -66,14 +66,20 @@ export default function StreakCard({ today, completed, streak, best, remaining }
 
       <p className="mt-3 text-[13px] text-zinc-400">
         {todayDone ? (
-          <span className="text-white">Journée alignée. Votre série continue.</span>
+          <span className="text-white">
+            {streak > 0 ? 'Journée alignée. Votre série continue.' : 'Journée alignée. Revenez demain pour lancer votre série.'}
+          </span>
         ) : (
           <>
             Encore{' '}
             <span className="font-medium tabular-nums text-white">
               {remaining} {remaining > 1 ? 'tâches' : 'tâche'}
             </span>{' '}
-            pour {streak > 0 ? 'prolonger' : 'lancer'} la série aujourd’hui.
+            {streak > 0
+              ? 'pour prolonger la série aujourd’hui.'
+              : run > 0
+                ? 'pour lancer la série aujourd’hui.'
+                : 'aujourd’hui. Deux jours d’affilée lancent votre série.'}
           </>
         )}
       </p>
