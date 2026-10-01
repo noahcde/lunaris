@@ -228,6 +228,7 @@ export default function App() {
 
   const signOut = async () => {
     setSheetOpen(false)
+    setEntry('landing')
     await backend.signOut()
   }
 
@@ -322,6 +323,7 @@ export default function App() {
         onSignOut={signOut}
         onResetDemo={() => {
           setSheetOpen(false)
+          setEntry('landing')
           backend.resetDemo()
         }}
       />
