@@ -240,10 +240,11 @@ export default function App() {
   if (!backend || user === undefined || (user && !data)) return shell(<Splash />)
   if (!user) {
     const demo = backend.mode === 'demo'
-    if (entry === 'quiz') return shell(<Quiz initial={quiz} onBack={() => setEntry('landing')} onComplete={completeQuiz} />)
+    if (entry === 'quiz') return shell(<Quiz initial={quiz} onBack={() => setEntry('landing')} onComplete={completeQuiz} />, true)
     if (entry === 'login')
       return shell(
         <Login onSignIn={backend.signInWithGoogle} demo={demo} fromQuiz={Boolean(quiz)} onBack={() => setEntry('landing')} />,
+        true,
       )
     return shell(
       <Landing
