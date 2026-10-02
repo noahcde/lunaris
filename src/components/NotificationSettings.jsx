@@ -12,8 +12,17 @@ const ERRORS = {
 }
 
 // Réglage « Notification du matin » : interrupteur + heure d'envoi.
-export default function NotificationSettings({ notifications, demo, onEnable, onUpdate, onShowGuide }) {
+// Résultat lisible du bouton de test.
+function testMessage({ successCount, errors }) {
+  if (errors.includes('aucun-appareil')) return 'Aucun appareil enregistré : désactivez puis réactivez l’interrupteur.'
+  if (successCount > 0 && errors.length === 0) return 'Notification envoyée : elle doit arriver dans quelques secondes.'
+  if (successCount > 0) return `Envoyée à ${successCount} appareil(s), échec sur ${errors.length} (${errors.join(', ')}).`
+  return `L’envoi a échoué (${errors.join(', ')}). Désactivez puis réactivez l’interrupteur.`
+}
+
+export default function NotificationSettings({ notifications, demo, onEnable, onUpdate, onTest, onShowGuide }) {
   const [pending, setPending] = useState(false)
+  const [test, setTest] = useState(null) // null | 'sending' | message
   const [error, setError] = useState(null)
   const enabled = Boolean(notifications?.enabled)
   const hour = notifications?.hour ?? DEFAULT_HOUR
@@ -21,8 +30,18 @@ export default function NotificationSettings({ notifications, demo, onEnable, on
   const needsInstall = !demo && detectPlatform() === 'ios' && !isStandalone()
   const unsupported = !demo && !needsInstall && !pushSupported()
 
+  const sendTest = async () => {
+    setTest('sending')
+    try {
+      setTest(testMessage(await onTest()))
+    } catch {
+      setTest('Le test n’a pas pu partir. Vérifiez votre connexion, puis réessayez.')
+    }
+  }
+
   const toggle = async () => {
     setError(null)
+    setTest(null)
     if (enabled) {
       onUpdate({ enabled: false })
       return
@@ -88,6 +107,19 @@ export default function NotificationSettings({ notifications, demo, onEnable, on
             ))}
           </select>
         </label>
+      )}
+      {enabled && onTest && (
+        <div className="mt-3 border-t border-zinc-900 pt-3">
+          <button
+            type="button"
+            onClick={sendTest}
+            disabled={test === 'sending'}
+            className="text-xs font-medium text-blue-500 transition-colors duration-300 hover:text-blue-400 disabled:cursor-wait disabled:text-zinc-500"
+          >
+            {test === 'sending' ? 'Envoi…' : 'Envoyer une notification de test'}
+          </button>
+          {test && test !== 'sending' && <p className="mt-1.5 text-xs leading-relaxed text-zinc-400">{test}</p>}
+        </div>
       )}
 
       {needsInstall && (

@@ -341,6 +341,7 @@ export default function App() {
       demo={backend.mode === 'demo'}
       onEnable={enableNotifications}
       onUpdate={updateNotifications}
+      onTest={backend.sendTestNotification}
       onShowGuide={() => {
         setSheetOpen(false)
         setInstallOpen(true)

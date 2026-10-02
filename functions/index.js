@@ -178,3 +178,10 @@ export const morningNotifications = onSchedule(
     await sendMorningNotifications({ appUrl: APP_URL.value(), logger })
   },
 )
+
+export const sendTestNotification = onCall({ region: 'europe-west1', maxInstances: 10 }, async (request) => {
+  const uid = requireUid(request)
+  await loadDeps() // initialise Firebase Admin
+  const notify = await import('./notify.js')
+  return notify.sendTestNotification({ uid, appUrl: APP_URL.value(), logger })
+})

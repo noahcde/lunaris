@@ -36,6 +36,7 @@ const getDailyFn = httpsCallable(functions, 'getDaily', { timeout: 120000 })
 const getBillingFn = httpsCallable(functions, 'getBilling')
 const startCheckoutFn = httpsCallable(functions, 'startCheckout')
 const openBillingPortalFn = httpsCallable(functions, 'openBillingPortal')
+const sendTestNotificationFn = httpsCallable(functions, 'sendTestNotification')
 
 // Prénom et nom fournis par Google lors de la connexion, gardés pour pré-remplir le profil.
 let googleNames = null
@@ -120,8 +121,10 @@ export async function openBillingPortal() {
 export const notificationsAvailable = Boolean(VAPID_KEY)
 
 export async function enableNotifications(uid, hour) {
-  if (!VAPID_KEY || !(await messagingSupported().catch(() => false))) throw Object.assign(new Error(), { code: 'unsupported' })
+  if (!VAPID_KEY || !('Notification' in window)) throw Object.assign(new Error(), { code: 'unsupported' })
+  // Demande d'autorisation en premier, directement après le toucher : l'iPhone l'exige.
   const permission = await Notification.requestPermission()
+  if (!(await messagingSupported().catch(() => false))) throw Object.assign(new Error(), { code: 'unsupported' })
   if (permission !== 'granted') throw Object.assign(new Error(), { code: 'denied' })
   const params = new URLSearchParams({
     apiKey: config.apiKey,
@@ -138,6 +141,12 @@ export async function enableNotifications(uid, hour) {
     { merge: true },
   )
   return settings
+}
+
+// Envoie tout de suite une notification à tous les appareils du compte : { successCount, errors }.
+export async function sendTestNotification() {
+  const { data } = await sendTestNotificationFn({})
+  return data
 }
 
 export async function updateNotifications(uid, partial) {

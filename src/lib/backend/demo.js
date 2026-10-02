@@ -172,6 +172,11 @@ export async function enableNotifications(_uid, hour) {
   return settings
 }
 
+export async function sendTestNotification() {
+  await new Promise((r) => setTimeout(r, 600))
+  return { successCount: 1, errors: [] }
+}
+
 export async function updateNotifications(_uid, partial) {
   const current = memory.data?.notifications ?? {}
   await saveUserData(null, { notifications: { ...current, ...partial } })
