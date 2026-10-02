@@ -11,7 +11,7 @@ const ERRORS = {
   unsupported: 'Ce navigateur ne permet pas les notifications. Essayez avec Chrome, ou Safari sur iPhone.',
 }
 
-// Réglage « Notification du matin » : interrupteur + heure d'envoi.
+// Réglage « Notifications » : interrupteur + heure d'envoi.
 // Résultat lisible du bouton de test.
 function testMessage({ successCount, errors }) {
   if (errors.includes('aucun-appareil')) return 'Aucun appareil enregistré : désactivez puis réactivez l’interrupteur.'
@@ -62,7 +62,7 @@ export default function NotificationSettings({ notifications, demo, onEnable, on
       <div className="flex items-center gap-3">
         <Bell className="h-4 w-4 shrink-0 text-blue-600" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-white">Notification du matin</p>
+          <p className="text-sm text-white">Notifications</p>
           <p className="text-xs text-zinc-500">Un rappel quand votre horoscope du jour est prêt.</p>
         </div>
         {!needsInstall && !unsupported && (
@@ -70,7 +70,7 @@ export default function NotificationSettings({ notifications, demo, onEnable, on
             type="button"
             role="switch"
             aria-checked={enabled}
-            aria-label="Notification du matin"
+            aria-label="Notifications"
             onClick={toggle}
             disabled={pending}
             className={cx(

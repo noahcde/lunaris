@@ -206,7 +206,7 @@ export const DOCS = [
             list: [
               'Fournir le service (compte, horoscope, tâches, calendrier, série) : exécution du contrat.',
               'Gérer l’abonnement et la facturation : exécution du contrat et obligations légales comptables.',
-              'Envoyer la notification du matin : votre consentement, retirable à tout moment depuis le profil.',
+              'Envoyer les notifications : votre consentement, retirable à tout moment depuis le profil.',
               'Assurer la sécurité et le bon fonctionnement du service : intérêt légitime.',
               'Mesurer l’audience pour améliorer le site (Microsoft Clarity) : votre consentement, donné ou refusé via le bandeau cookies.',
             ],
@@ -263,7 +263,7 @@ export const DOCS = [
               'Session de connexion (Firebase Authentication), pour rester connecté.',
               'Réponses au questionnaire, gardées dans votre navigateur le temps de vous connecter.',
               'Votre choix sur les cookies, pour ne pas vous le redemander à chaque visite (6 mois).',
-              'Service de notifications (service worker), uniquement si vous activez la notification du matin.',
+              'Service de notifications (service worker), uniquement si vous activez les notifications.',
             ],
           },
         ],
