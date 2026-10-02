@@ -143,6 +143,13 @@ export default function App() {
     })
   }, [profileReady, user?.uid, refreshAccess])
 
+  // Notifications activées : à chaque ouverture, on met à jour le service worker et le jeton de l'appareil.
+  const notificationsOn = Boolean(data?.notifications?.enabled)
+  useEffect(() => {
+    if (!notificationsOn || !user?.uid || !backend?.refreshNotifications) return
+    backend.refreshNotifications(user.uid).catch(() => {})
+  }, [notificationsOn, user?.uid, backend])
+
   // L'URL (#accueil, #calendrier) suit la page affichée, et le bouton retour fonctionne.
   useEffect(() => {
     const onHashChange = () => {

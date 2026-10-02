@@ -120,20 +120,28 @@ export async function openBillingPortal() {
 // Erreurs possibles (err.code) : 'unsupported', 'denied'.
 export const notificationsAvailable = Boolean(VAPID_KEY)
 
+// Enregistre le service worker (mis à jour au passage) et renvoie le jeton de cet appareil.
+async function deviceToken() {
+  const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+  await registration.update().catch(() => {})
+  return getToken(getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
+}
+
+// À chaque ouverture : si les notifications sont autorisées, on renvoie le jeton (il peut changer).
+export async function refreshNotifications(uid) {
+  if (!VAPID_KEY || !('Notification' in window) || Notification.permission !== 'granted') return
+  if (!(await messagingSupported().catch(() => false))) return
+  const token = await deviceToken()
+  await setDoc(doc(db, 'users', uid), { notifications: { tokens: arrayUnion(token) } }, { merge: true })
+}
+
 export async function enableNotifications(uid, hour) {
   if (!VAPID_KEY || !('Notification' in window)) throw Object.assign(new Error(), { code: 'unsupported' })
   // Demande d'autorisation en premier, directement après le toucher : l'iPhone l'exige.
   const permission = await Notification.requestPermission()
   if (!(await messagingSupported().catch(() => false))) throw Object.assign(new Error(), { code: 'unsupported' })
   if (permission !== 'granted') throw Object.assign(new Error(), { code: 'denied' })
-  const params = new URLSearchParams({
-    apiKey: config.apiKey,
-    projectId: config.projectId,
-    appId: config.appId,
-    messagingSenderId: config.messagingSenderId,
-  })
-  const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${params}`)
-  const token = await getToken(getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
+  const token = await deviceToken()
   const settings = { enabled: true, hour, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris' }
   await setDoc(
     doc(db, 'users', uid),

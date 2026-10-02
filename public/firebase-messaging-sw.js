@@ -1,14 +1,39 @@
 // Service worker des notifications du matin (Firebase Cloud Messaging).
-// La configuration web Firebase (publique) est passée dans l'adresse d'enregistrement par l'app.
-importScripts('https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js')
-importScripts('https://www.gstatic.com/firebasejs/11.10.0/firebase-messaging-compat.js')
+// On affiche nous-mêmes chaque notification reçue, que l'app soit ouverte ou fermée :
+// sur iPhone, une notification reçue sans être affichée peut faire couper l'abonnement par Safari.
 
-const params = new URLSearchParams(self.location.search)
-firebase.initializeApp({
-  apiKey: params.get('apiKey'),
-  projectId: params.get('projectId'),
-  appId: params.get('appId'),
-  messagingSenderId: params.get('messagingSenderId'),
+self.addEventListener('install', () => self.skipWaiting())
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
+
+self.addEventListener('push', (event) => {
+  let payload = {}
+  try {
+    payload = event.data?.json() ?? {}
+  } catch {
+    // Contenu illisible : on affiche quand même un rappel générique.
+  }
+  const n = payload.notification ?? {}
+  const link = payload.fcmOptions?.link ?? n.click_action ?? '/#accueil'
+  event.waitUntil(
+    self.registration.showNotification(n.title ?? 'Lunaris', {
+      body: n.body ?? 'Votre horoscope du jour est prêt ✨',
+      icon: n.icon ?? '/lunaris-192.png',
+      badge: '/lunaris-192.png',
+      tag: 'lunaris-matin',
+      data: { link },
+    }),
+  )
 })
-// Affiche les notifications reçues quand l'app est fermée ; un clic ouvre le lien envoyé par le serveur.
-firebase.messaging()
+
+// Un toucher sur la notification ouvre Lunaris (ou ramène l'onglet déjà ouvert au premier plan).
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const target = new URL(event.notification.data?.link ?? '/#accueil', self.location.origin).href
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => new URL(w.url).origin === self.location.origin)
+      if (open) return open.focus().then((w) => w?.navigate?.(target)).catch(() => {})
+      return self.clients.openWindow(target)
+    }),
+  )
+})

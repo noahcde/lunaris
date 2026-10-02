@@ -172,6 +172,8 @@ export async function enableNotifications(_uid, hour) {
   return settings
 }
 
+export async function refreshNotifications() {}
+
 export async function sendTestNotification() {
   await new Promise((r) => setTimeout(r, 600))
   return { successCount: 1, errors: [] }
