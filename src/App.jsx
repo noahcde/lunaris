@@ -376,7 +376,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-black font-sans text-zinc-400">
-      <main key={page} className="mx-auto flex w-full max-w-md animate-page-in flex-col gap-7 px-5 pb-32 lg:max-w-5xl lg:px-10">
+      {/* data-clarity-mask : contenu personnel masqué dans les enregistrements de Clarity */}
+      <main key={page} data-clarity-mask="true" className="mx-auto flex w-full max-w-md animate-page-in flex-col gap-7 px-5 pb-32 lg:max-w-5xl lg:px-10">
         {page === 'accueil' ? (
           <Home
             today={today}

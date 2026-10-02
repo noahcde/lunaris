@@ -13,7 +13,7 @@ export const EDITEUR = {
   mediateur: '', // nom, adresse et site du médiateur de la consommation choisi
 }
 
-export const UPDATED = '1er octobre 2026'
+export const UPDATED = '2 octobre 2026'
 export const SITE = 'lunaris-app.fr'
 
 // {nom}, {statut}… sont remplacés par les champs EDITEUR (voir LegalPage).
@@ -208,6 +208,7 @@ export const DOCS = [
               'Gérer l’abonnement et la facturation : exécution du contrat et obligations légales comptables.',
               'Envoyer la notification du matin : votre consentement, retirable à tout moment depuis le profil.',
               'Assurer la sécurité et le bon fonctionnement du service : intérêt légitime.',
+              'Mesurer l’audience pour améliorer le site (Microsoft Clarity) : votre consentement, donné ou refusé via le bandeau cookies.',
             ],
           },
           'Vos données ne sont ni vendues, ni utilisées pour de la publicité.',
@@ -227,6 +228,7 @@ export const DOCS = [
               'Google (Firebase) : connexion, base de données, hébergement, serveurs et notifications.',
               'Stripe : paiement et gestion de l’abonnement.',
               'OpenAI : rédaction de l’horoscope et des tâches.',
+              'Microsoft (Clarity) : mesure d’audience, uniquement si vous l’acceptez.',
             ],
           },
           'Certains de ces prestataires peuvent traiter des données hors de l’Union européenne, notamment aux États-Unis. Ces transferts sont encadrés par le cadre de protection des données UE–États-Unis ou par les clauses contractuelles types de la Commission européenne.',
@@ -235,7 +237,7 @@ export const DOCS = [
       {
         title: 'Durée de conservation',
         body: [
-          'Vos données sont conservées tant que votre compte existe, puis supprimées dans un délai de 30 jours après votre demande de suppression. Les pièces comptables liées aux paiements sont conservées 10 ans, comme l’exige la loi.',
+          'Vos données sont conservées tant que votre compte existe, puis supprimées dans un délai de 30 jours après votre demande de suppression. Les pièces comptables liées aux paiements sont conservées 10 ans, comme l’exige la loi. Les données de mesure d’audience sont conservées au plus 13 mois.',
         ],
       },
       {
@@ -253,17 +255,26 @@ export const DOCS = [
     title: 'Cookies et traceurs',
     sections: [
       {
-        title: 'Ce que Lunaris utilise',
+        title: 'Traceurs indispensables',
         body: [
-          'Lunaris n’utilise aucun cookie publicitaire ni outil de mesure d’audience. Seuls des traceurs strictement nécessaires au fonctionnement sont déposés sur votre appareil :',
+          'Lunaris n’utilise aucun cookie publicitaire. Certains traceurs sont strictement nécessaires au fonctionnement et ne demandent pas votre accord :',
           {
             list: [
               'Session de connexion (Firebase Authentication), pour rester connecté.',
               'Réponses au questionnaire, gardées dans votre navigateur le temps de vous connecter.',
+              'Votre choix sur les cookies, pour ne pas vous le redemander à chaque visite (6 mois).',
               'Service de notifications (service worker), uniquement si vous activez la notification du matin.',
             ],
           },
-          'Ces traceurs sont exemptés de consentement, conformément aux recommandations de la CNIL : c’est pourquoi aucun bandeau ne vous est présenté.',
+        ],
+      },
+      {
+        title: 'Mesure d’audience (avec votre accord)',
+        body: [
+          'Si vous cliquez sur « Accepter », nous utilisons Microsoft Clarity pour comprendre comment le site est utilisé : pages vues, clics, défilement et enregistrement de la navigation. Cela nous aide à repérer ce qui bloque et à améliorer Lunaris.',
+          'Vos informations personnelles (nom, e-mail, date de naissance, horoscope, réponses saisies) sont masquées dans ces enregistrements. Les données ne servent pas à la publicité.',
+          'Cookies déposés par Clarity : _clck et CLID (jusqu’à 1 an), _clsk (1 jour), MUID (jusqu’à 1 an).',
+          'Si vous refusez, Clarity n’est pas chargé du tout. Votre choix est gardé 6 mois et vous pouvez le modifier à tout moment avec le bouton ci-dessous ou le lien « Gérer les cookies » en bas des pages.',
         ],
       },
       {

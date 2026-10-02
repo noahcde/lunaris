@@ -63,7 +63,7 @@ export default function Onboarding({ initial, onSubmit, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex min-h-screen flex-col pb-10 pt-8">
+    <form onSubmit={handleSubmit} data-clarity-mask="true" className="flex min-h-screen flex-col pb-10 pt-8">
       <Logo size="sm" className="mb-6" />
       {onCancel && (
         <button

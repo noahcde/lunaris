@@ -60,6 +60,7 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
       />
       <div
         role="dialog"
+        data-clarity-mask="true"
         aria-modal="true"
         aria-label="Profil"
         className={cx(

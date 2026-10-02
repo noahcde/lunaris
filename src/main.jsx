@@ -9,9 +9,14 @@ import '@fontsource/inter/latin-700.css'
 import '@fontsource/inter/latin-800.css'
 import '@fontsource/newsreader/latin-500.css'
 import './index.css'
+import CookieBanner from './components/CookieBanner'
+import { startAnalyticsIfAllowed } from './lib/consent'
+
+startAnalyticsIfAllowed()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
+    <CookieBanner />
   </React.StrictMode>,
 )

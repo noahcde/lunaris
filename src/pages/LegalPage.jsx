@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react'
 import Logo from '../components/Logo'
 import { cx } from '../lib/astro'
 import { DOCS, EDITEUR, SITE, UPDATED } from '../content/legal'
+import { analyticsAvailable, resetConsent } from '../lib/consent'
 
 const LABELS = {
   nom: 'nom ou société',
@@ -48,6 +49,11 @@ export function LegalLinks({ className }) {
           {d.short}
         </a>
       ))}
+      {analyticsAvailable && (
+        <button type="button" onClick={resetConsent} className="transition-colors duration-300 hover:text-zinc-300">
+          Gérer les cookies
+        </button>
+      )}
     </nav>
   )
 }
@@ -107,6 +113,16 @@ export default function LegalPage({ docId, onClose }) {
           </section>
         ))}
       </div>
+
+      {doc.id === 'cookies' && analyticsAvailable && (
+        <button
+          type="button"
+          onClick={resetConsent}
+          className="mt-8 rounded-xl border border-zinc-800 px-4 py-2.5 text-sm font-medium text-white transition-all duration-300 ease-in-out hover:border-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+        >
+          Modifier mon choix sur les cookies
+        </button>
+      )}
     </div>
   )
 }
