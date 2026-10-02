@@ -2,7 +2,7 @@
 // - getDaily : horoscope et 3 tâches du jour, réservés aux abonnés. Le résultat est mis en cache dans
 //   users/{uid}/daily/{date} : un seul appel à l'IA par personne et par jour.
 // - getBilling, startCheckout, openBillingPortal : abonnement Stripe (voir billing.js).
-// - morningNotifications : rappel quotidien à l'heure choisie par chacun (voir notify.js), lancé chaque heure.
+// - morningNotifications : rappel quotidien à l'heure et la minute choisies par chacun (voir notify.js), lancé chaque minute.
 import { defineSecret, defineString } from 'firebase-functions/params'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
@@ -171,7 +171,7 @@ export const getDaily = onCall(
 )
 
 export const morningNotifications = onSchedule(
-  { schedule: '0 * * * *', timeZone: 'Europe/Paris', region: 'europe-west1', timeoutSeconds: 300 },
+  { schedule: '* * * * *', timeZone: 'Europe/Paris', region: 'europe-west1', timeoutSeconds: 120 },
   async () => {
     await loadDeps() // initialise Firebase Admin
     const { sendMorningNotifications } = await import('./notify.js')

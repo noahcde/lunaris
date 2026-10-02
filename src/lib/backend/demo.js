@@ -165,9 +165,9 @@ export async function openBillingPortal() {
 // Démo : les notifications sont simulées (aucune autorisation demandée, rien n'est envoyé).
 export const notificationsAvailable = true
 
-export async function enableNotifications(_uid, hour) {
+export async function enableNotifications(_uid, hour, minute = 0) {
   await new Promise((r) => setTimeout(r, 400))
-  const settings = { enabled: true, hour, timeZone: 'Europe/Paris' }
+  const settings = { enabled: true, hour, minute, timeZone: 'Europe/Paris' }
   await saveUserData(null, { notifications: settings })
   return settings
 }

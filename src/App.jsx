@@ -16,6 +16,7 @@ import Logo from './components/Logo'
 import InstallGuide from './components/InstallGuide'
 import NotificationSettings from './components/NotificationSettings'
 import { isStandalone } from './lib/pwa'
+import { nextSendAt } from './lib/schedule'
 import LegalPage from './pages/LegalPage'
 import { DOC_IDS } from './content/legal'
 
@@ -147,7 +148,9 @@ export default function App() {
   const notificationsOn = Boolean(data?.notifications?.enabled)
   useEffect(() => {
     if (!notificationsOn || !user?.uid || !backend?.refreshNotifications) return
-    backend.refreshNotifications(user.uid).catch(() => {})
+    const { hour, minute } = data.notifications
+    backend.refreshNotifications(user.uid, { hour, minute }).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- une fois par ouverture, pas à chaque réglage
   }, [notificationsOn, user?.uid, backend])
 
   // L'URL (#accueil, #calendrier) suit la page affichée, et le bouton retour fonctionne.
@@ -257,13 +260,16 @@ export default function App() {
   }
 
   // Notifications du matin : réglage enregistré sur le compte, envoi par le serveur à l'heure choisie.
-  const enableNotifications = async (hour) => {
-    const settings = await backend.enableNotifications(user.uid, hour)
+  const enableNotifications = async (hour, minute) => {
+    const settings = await backend.enableNotifications(user.uid, hour, minute)
     setData((prev) => ({ ...prev, notifications: { ...prev.notifications, ...settings } }))
   }
   const updateNotifications = (partial) => {
-    setData((prev) => ({ ...prev, notifications: { ...prev.notifications, ...partial } }))
-    backend.updateNotifications(user.uid, partial).catch(() => {
+    // Nouvelle heure ou désactivation : le prochain envoi est reprogrammé (null = plus d'envoi).
+    const merged = { ...data.notifications, ...partial }
+    const change = { ...partial, nextSendAt: merged.enabled ? nextSendAt(merged) : null }
+    setData((prev) => ({ ...prev, notifications: { ...prev.notifications, ...change } }))
+    backend.updateNotifications(user.uid, change).catch(() => {
       // Échec réseau : le réglage local reste affiché, il sera renvoyé au prochain changement.
     })
   }

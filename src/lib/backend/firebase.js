@@ -16,6 +16,7 @@ import {
 } from 'firebase/auth'
 import { arrayUnion, doc, getDoc, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
+import { nextSendAt } from '../schedule'
 import { getMessaging, getToken, isSupported as messagingSupported } from 'firebase/messaging'
 
 const config = {
@@ -120,6 +121,8 @@ export async function openBillingPortal() {
 // Erreurs possibles (err.code) : 'unsupported', 'denied'.
 export const notificationsAvailable = Boolean(VAPID_KEY)
 
+const localTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris'
+
 // Enregistre le service worker (mis à jour au passage) et renvoie le jeton de cet appareil.
 async function deviceToken() {
   const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
@@ -128,24 +131,27 @@ async function deviceToken() {
 }
 
 // À chaque ouverture : si les notifications sont autorisées, on renvoie le jeton (il peut changer).
-export async function refreshNotifications(uid) {
+// La date du prochain envoi est recalculée au passage (heure d'été, changement de fuseau…).
+export async function refreshNotifications(uid, settings) {
+  const timeZone = localTimeZone()
+  await setDoc(doc(db, 'users', uid), { notifications: { timeZone, nextSendAt: nextSendAt({ ...settings, timeZone }) } }, { merge: true })
   if (!VAPID_KEY || !('Notification' in window) || Notification.permission !== 'granted') return
   if (!(await messagingSupported().catch(() => false))) return
   const token = await deviceToken()
   await setDoc(doc(db, 'users', uid), { notifications: { tokens: arrayUnion(token) } }, { merge: true })
 }
 
-export async function enableNotifications(uid, hour) {
+export async function enableNotifications(uid, hour, minute = 0) {
   if (!VAPID_KEY || !('Notification' in window)) throw Object.assign(new Error(), { code: 'unsupported' })
   // Demande d'autorisation en premier, directement après le toucher : l'iPhone l'exige.
   const permission = await Notification.requestPermission()
   if (!(await messagingSupported().catch(() => false))) throw Object.assign(new Error(), { code: 'unsupported' })
   if (permission !== 'granted') throw Object.assign(new Error(), { code: 'denied' })
   const token = await deviceToken()
-  const settings = { enabled: true, hour, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris' }
+  const settings = { enabled: true, hour, minute, timeZone: localTimeZone() }
   await setDoc(
     doc(db, 'users', uid),
-    { notifications: { ...settings, tokens: arrayUnion(token) }, updatedAt: serverTimestamp() },
+    { notifications: { ...settings, nextSendAt: nextSendAt(settings), tokens: arrayUnion(token) }, updatedAt: serverTimestamp() },
     { merge: true },
   )
   return settings

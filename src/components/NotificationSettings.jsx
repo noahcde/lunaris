@@ -3,8 +3,8 @@ import { Bell, Loader2 } from 'lucide-react'
 import { cx } from '../lib/astro'
 import { detectPlatform, isStandalone, pushSupported } from '../lib/pwa'
 
-const HOURS = [6, 7, 8, 9, 10, 11, 12]
 export const DEFAULT_HOUR = 8
+const pad = (n) => String(n).padStart(2, '0')
 
 const ERRORS = {
   denied: 'Les notifications sont bloquées pour ce site. Autorisez-les dans les réglages du navigateur, puis réessayez.',
@@ -26,6 +26,7 @@ export default function NotificationSettings({ notifications, demo, onEnable, on
   const [error, setError] = useState(null)
   const enabled = Boolean(notifications?.enabled)
   const hour = notifications?.hour ?? DEFAULT_HOUR
+  const minute = notifications?.minute ?? 0
 
   const needsInstall = !demo && detectPlatform() === 'ios' && !isStandalone()
   const unsupported = !demo && !needsInstall && !pushSupported()
@@ -48,7 +49,7 @@ export default function NotificationSettings({ notifications, demo, onEnable, on
     }
     setPending(true)
     try {
-      await onEnable(hour)
+      await onEnable(hour, minute)
     } catch (err) {
       setError(ERRORS[err?.code] ?? 'L’activation a échoué. Vérifiez votre connexion, puis réessayez.')
     } finally {
@@ -95,17 +96,16 @@ export default function NotificationSettings({ notifications, demo, onEnable, on
       {enabled && (
         <label className="mt-3 flex items-center justify-between gap-3 border-t border-zinc-900 pt-3 text-xs text-zinc-400">
           Heure d’envoi
-          <select
-            value={hour}
-            onChange={(e) => onUpdate({ hour: Number(e.target.value) })}
-            className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-sm text-white focus:border-blue-600 focus:outline-none"
-          >
-            {HOURS.map((h) => (
-              <option key={h} value={h}>
-                {h} h
-              </option>
-            ))}
-          </select>
+          <input
+            type="time"
+            step={60}
+            value={`${pad(hour)}:${pad(minute)}`}
+            onChange={(e) => {
+              const [h, m] = e.target.value.split(':').map(Number)
+              if (Number.isInteger(h) && Number.isInteger(m)) onUpdate({ hour: h, minute: m })
+            }}
+            className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-sm tabular-nums text-white [color-scheme:dark] focus:border-blue-600 focus:outline-none"
+          />
         </label>
       )}
       {enabled && onTest && (

@@ -1,8 +1,9 @@
 // Notifications du matin (Firebase Cloud Messaging).
-// Lancé chaque heure : envoie un rappel aux personnes dont c'est l'heure choisie, dans leur fuseau horaire,
-// une seule fois par jour. Réglages et jetons des appareils : users/{uid}.notifications (écrits par l'app).
+// Lancé chaque minute : envoie un rappel aux personnes dont l'heure choisie (heure et minute, dans leur fuseau)
+// est arrivée, puis programme l'envoi du lendemain. Réglages et jetons des appareils : users/{uid}.notifications (écrits par l'app).
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { getMessaging } from 'firebase-admin/messaging'
+import { nextSendAt } from './schedule.js'
 
 const MAX_TOKENS = 10 // appareils gardés par personne (les plus récents)
 const DEAD_TOKEN_CODES = new Set([
@@ -11,23 +12,13 @@ const DEAD_TOKEN_CODES = new Set([
   'messaging/invalid-argument',
 ])
 
-// Heure (0-23) et date AAAA-MM-JJ actuelles dans un fuseau horaire donné.
-function localNow(timeZone, now) {
-  let parts
+// Date AAAA-MM-JJ dans un fuseau horaire donné (fuseau inconnu : Paris).
+function localDate(timeZone, now) {
   try {
-    parts = new Intl.DateTimeFormat('en-CA', {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      hourCycle: 'h23',
-    }).formatToParts(now)
+    return new Intl.DateTimeFormat('en-CA', { timeZone: timeZone || 'Europe/Paris' }).format(now)
   } catch {
-    return localNow('Europe/Paris', now) // fuseau inconnu
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(now)
   }
-  const get = (type) => parts.find((p) => p.type === type).value
-  return { hour: Number(get('hour')), date: `${get('year')}-${get('month')}-${get('day')}` }
 }
 
 // Envoie la notification à tous les appareils d'une personne. Renvoie le nombre d'envois réussis
@@ -56,22 +47,26 @@ async function sendToUser(userDoc, { appUrl, body }) {
 }
 
 export async function sendMorningNotifications({ appUrl, logger }) {
-  const db = getFirestore()
   const now = new Date()
-  const snap = await db.collection('users').where('notifications.enabled', '==', true).get()
+  // Seules les personnes dont l'heure d'envoi est arrivée sont lues (notifications.nextSendAt, calculé par l'app).
+  const snap = await getFirestore().collection('users').where('notifications.nextSendAt', '<=', now).get()
   let sent = 0
 
   for (const userDoc of snap.docs) {
     const n = userDoc.data().notifications
-    const { hour, date } = localNow(n.timeZone || 'Europe/Paris', now)
-    if (hour !== (n.hour ?? 8) || n.lastSent === date || !n.tokens?.length) continue
-
-    const { successCount, errors } = await sendToUser(userDoc, { appUrl })
-    sent += successCount
-    if (errors.length) logger.warn('Notification du matin non délivrée', { uid: userDoc.id, errors })
-    await userDoc.ref.update({ 'notifications.lastSent': date })
+    const next = nextSendAt(n, new Date(now.getTime() + 60000))
+    if (!n.enabled) {
+      await userDoc.ref.update({ 'notifications.nextSendAt': null })
+      continue
+    }
+    if (n.tokens?.length) {
+      const { successCount, errors } = await sendToUser(userDoc, { appUrl })
+      sent += successCount
+      if (errors.length) logger.warn('Notification du matin non délivrée', { uid: userDoc.id, errors })
+    }
+    await userDoc.ref.update({ 'notifications.lastSent': localDate(n.timeZone, now), 'notifications.nextSendAt': next })
   }
-  logger.info('Notifications du matin', { candidates: snap.size, sent })
+  if (snap.size) logger.info('Notifications du matin', { candidates: snap.size, sent })
 }
 
 // Bouton « Envoyer une notification de test » du profil.
