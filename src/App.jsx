@@ -146,10 +146,24 @@ export default function App() {
 
   // Notifications activées : à chaque ouverture, on met à jour le service worker et le jeton de l'appareil.
   const notificationsOn = Boolean(data?.notifications?.enabled)
+  const notificationsRef = useRef(data?.notifications)
+  notificationsRef.current = data?.notifications
   useEffect(() => {
     if (!notificationsOn || !user?.uid || !backend?.refreshNotifications) return
-    const { hour, minute } = data.notifications
-    backend.refreshNotifications(user.uid, { hour, minute }).catch(() => {})
+    // Au lancement, puis à chaque retour dans l'app (l'iPhone la reprend souvent sans la recharger),
+    // au plus une fois toutes les 10 minutes. Un essai raté est retenté au retour suivant.
+    let last = 0
+    const refresh = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - last < 600000) return
+      last = Date.now()
+      const { hour, minute } = notificationsRef.current ?? {}
+      backend.refreshNotifications(user.uid, { hour, minute }).catch(() => {
+        last = 0
+      })
+    }
+    refresh()
+    document.addEventListener('visibilitychange', refresh)
+    return () => document.removeEventListener('visibilitychange', refresh)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- une fois par ouverture, pas à chaque réglage
   }, [notificationsOn, user?.uid, backend])
 

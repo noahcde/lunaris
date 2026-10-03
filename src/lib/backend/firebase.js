@@ -124,9 +124,23 @@ export const notificationsAvailable = Boolean(VAPID_KEY)
 const localTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris'
 
 // Enregistre le service worker (mis à jour au passage) et renvoie le jeton de cet appareil.
+// Attend que le service worker soit vraiment actif : juste après une mise à jour du site,
+// le nouveau est encore en cours d'installation et l'iPhone refuse alors l'abonnement.
+function waitUntilActive(registration) {
+  const worker = registration.installing ?? registration.waiting
+  if (!worker) return Promise.resolve()
+  return new Promise((resolve) => {
+    const done = () => worker.state === 'activated' && resolve()
+    worker.addEventListener('statechange', done)
+    setTimeout(resolve, 10000)
+    done()
+  })
+}
+
 async function deviceToken() {
   const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
   await registration.update().catch(() => {})
+  await waitUntilActive(registration)
   return getToken(getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
 }
 
