@@ -8,6 +8,10 @@ import { fileURLToPath } from 'node:url'
 import { lunations } from './moon.mjs'
 import { SIGNES } from '../../src/content/seo/signes.js'
 import { FAQ_LUNE, LUNE_EN, PHASES } from '../../src/content/seo/lunes.js'
+import { COMPAT as C1 } from '../../src/content/seo/compat-1.js'
+import { COMPAT as C2 } from '../../src/content/seo/compat-2.js'
+import { COMPAT as C3 } from '../../src/content/seo/compat-3.js'
+import { COMPAT as C4 } from '../../src/content/seo/compat-4.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const OUT = process.env.SEO_OUT ?? join(ROOT, 'dist')
@@ -20,6 +24,16 @@ const today = new Date()
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const plain = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 const SIGN = Object.fromEntries(SIGNES.map((s) => [s.slug, s]))
+const COMPAT = [...C1, ...C2, ...C3, ...C4]
+const ORDER = SIGNES.map((s) => s.slug)
+// Adresse d'un duo, toujours dans l'ordre du zodiaque : /compatibilite/belier-scorpion/
+const compatPath = (x, y) => {
+  const [a, b] = ORDER.indexOf(x) <= ORDER.indexOf(y) ? [x, y] : [y, x]
+  return `/compatibilite/${a}-${b}/`
+}
+const duo = (a, b) => (a === b ? `Deux ${SIGN[a].pluriel}` : `${SIGN[a].nom} et ${SIGN[b].nom}`)
+// Pluriels pour « deux Lions », « deux Gémeaux »…
+for (const s of SIGNES) s.pluriel = /[sx]$/.test(s.nom) ? s.nom : `${s.nom}s`
 
 // ---------- Dates ----------
 
@@ -50,8 +64,9 @@ function href(from, to) {
   if (/^https?:/.test(to)) return to
   if (to === '/' || to.startsWith('/#')) return PREVIEW ? `${SITE}${to}` : to
   if (!PREVIEW) return to
-  const rel = posix.relative(posix.dirname(`${from}index.html`), to.endsWith('/') ? `${to}index.html` : to)
-  return rel || 'index.html'
+  const [target, hash] = to.split('#')
+  const rel = posix.relative(posix.dirname(`${from}index.html`), target.endsWith('/') ? `${target}index.html` : target)
+  return (rel || 'index.html') + (hash ? `#${hash}` : '')
 }
 
 const LOGO =
@@ -100,7 +115,7 @@ ${ld}
 <div class="wrap">
 <header class="top">
 <a class="brand" href="${h('/')}">${LOGO}Lunaris</a>
-<nav class="main" aria-label="Rubriques">${nav('/signes/', 'Signes', 'signes')}${nav('/calendrier-lunaire/', 'Calendrier lunaire', 'lune')}</nav>
+<nav class="main" aria-label="Rubriques">${nav('/signes/', 'Signes', 'signes')}${nav('/compatibilite/', 'Compatibilité', 'compat')}${nav('/calendrier-lunaire/', 'Calendrier lunaire', 'lune')}</nav>
 </header>
 <p class="crumbs">${crumbs.map(([name, to], i) => (i === crumbs.length - 1 ? esc(name) : `<a href="${h(to)}">${esc(name)}</a>`)).join(' › ')}</p>
 <main>
@@ -112,7 +127,7 @@ ${body(h)}
 </aside>
 </main>
 <footer class="bottom">
-<nav aria-label="Pages">${[...SIGNES.map((s) => [`/signes/${s.slug}/`, s.nom]), ['/calendrier-lunaire/', 'Calendrier lunaire']].map(([to, l]) => `<a href="${h(to)}">${esc(l)}</a>`).join('')}</nav>
+<nav aria-label="Pages">${[...SIGNES.map((s) => [`/signes/${s.slug}/`, s.nom]), ['/compatibilite/', 'Compatibilité'], ['/calendrier-lunaire/', 'Calendrier lunaire']].map(([to, l]) => `<a href="${h(to)}">${esc(l)}</a>`).join('')}</nav>
 <nav aria-label="Informations légales">${LEGAL.map(([id, l]) => `<a href="${h(`/#${id}`)}">${l}</a>`).join('')}</nav>
 <p>© ${today.getFullYear()} Lunaris</p>
 </footer>
@@ -195,6 +210,8 @@ ${
 <ul class="list">${next.map((e) => `<li><a href="${h(e.path)}">${esc(e.label)}</a> à ${hourMinute(e.date)} (heure de Paris) : ${esc(LUNE_EN[s.slug][e.type].theme.toLowerCase())}</li>`).join('')}</ul>`
     : ''
 }
+<h2>Compatibilité ${esc(s.nom.match(/^[AEIOUÉ]/) ? `de l’${s.nom}` : s.du.replace(/^le /, 'du ').replace(/^les /, 'des ').replace(/^la /, 'de la '))} avec chaque signe</h2>
+<p>${SIGNES.map((o) => `<a href="${h(compatPath(s.slug, o.slug))}">${esc(o.slug === s.slug ? `${s.nom} et ${s.nom}` : `${s.nom} et ${o.nom}`)}</a>`).join(' · ')}</p>
 <h2>Questions fréquentes</h2>
 ${faqHtml(s.faq)}
 <div class="pager"><a href="${h(`/signes/${prev.slug}/`)}">← ${esc(prev.nom)}</a><a href="${h(`/signes/${after.slug}/`)}">${esc(after.nom)} →</a></div>`,
@@ -272,6 +289,55 @@ ${paras(txt.texte)}
 <p style="margin-top:20px"><a href="${h('/calendrier-lunaire/')}">Voir tout le calendrier lunaire</a></p>`,
   })
 })
+
+pages.push({
+  path: '/compatibilite/',
+  section: 'compat',
+  title: 'Compatibilité astrologique : les 78 duos de signes | Lunaris',
+  description:
+    'Compatibilité amoureuse, amicale et professionnelle entre les 12 signes du zodiaque : forces, points de friction et conseils concrets pour chaque duo.',
+  crumbs: [['Accueil', '/'], ['Compatibilité', '/compatibilite/']],
+  body: (h) => `
+<h1>Compatibilité entre les signes</h1>
+<p class="lead">Comment deux signes s’accordent en amour, en amitié et au travail, selon la tradition astrologique. Choisissez votre signe, puis celui de l’autre personne.</p>
+${SIGNES.map(
+  (s) => `<h2 id="${s.slug}"><span aria-hidden="true">${s.symbole}︎</span> ${esc(s.nom)} avec…</h2>
+<p>${SIGNES.map((o) => `<a href="${h(compatPath(s.slug, o.slug))}">${esc(o.nom)}</a>`).join(' · ')}</p>`,
+).join('\n')}
+<h2>Comment lire une compatibilité ?</h2>
+<p>L’astrologie compare d’abord les éléments : deux signes du même élément se comprennent vite, le Feu s’accorde avec l’Air et la Terre avec l’Eau. Les signes opposés s’attirent fort mais doivent apprendre à composer. Aucune combinaison n’est interdite : une compatibilité décrit des tendances, et la relation dépend surtout de la façon dont chacun s’en sert.</p>`,
+})
+
+for (const c of COMPAT) {
+  const A = SIGN[c.a]
+  const B = SIGN[c.b]
+  const path = compatPath(c.a, c.b)
+  const name = duo(c.a, c.b)
+  pages.push({
+    path,
+    section: 'compat',
+    title: c.titreSeo,
+    description: c.description,
+    crumbs: [['Accueil', '/'], ['Compatibilité', '/compatibilite/'], [name, path]],
+    jsonLd: [faqLd(c.faq)],
+    body: (h) => `
+<h1><span aria-hidden="true">${A.symbole}︎ ${B.symbole}︎</span> ${esc(name)} : compatibilité</h1>
+<p class="lead">${esc(c.resume)}</p>
+<dl class="facts">
+<div><dt>Affinité</dt><dd>${esc(c.affinite)}</dd></div>
+<div><dt>Éléments</dt><dd>${esc(`${A.element} et ${B.element}`)}</dd></div>
+<div><dt>Modes</dt><dd>${esc(`${A.modalite} et ${B.modalite}`.toLowerCase().replace(/^./, (m) => m.toUpperCase()))}</dd></div>
+<div><dt>Planètes</dt><dd>${esc(A.slug === B.slug ? A.planete : `${A.planete}, ${B.planete}`)}</dd></div>
+</dl>
+${c.sections.map((sec) => `<h2>${esc(sec.titre)}</h2>\n${paras(sec.paragraphes)}`).join('\n')}
+<h2>3 conseils pour ce duo</h2>
+<ol class="actions">${c.conseils.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>
+<h2>Questions fréquentes</h2>
+${faqHtml(c.faq)}
+<h2>En savoir plus</h2>
+<p><a href="${h(`/signes/${A.slug}/`)}">Le signe ${esc(A.nom)}</a>${A.slug === B.slug ? '' : ` · <a href="${h(`/signes/${B.slug}/`)}">Le signe ${esc(B.nom)}</a>`} · <a href="${h(`/compatibilite/#${A.slug}`)}">${esc(A.nom)} avec les autres signes</a></p>`,
+  })
+}
 
 // ---------- Écriture ----------
 
