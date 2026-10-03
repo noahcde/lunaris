@@ -115,7 +115,7 @@ ${ld}
 <div class="wrap">
 <header class="top">
 <a class="brand" href="${h('/')}">${LOGO}Lunaris</a>
-<nav class="main" aria-label="Rubriques">${nav('/signes/', 'Signes', 'signes')}${nav('/compatibilite/', 'Compatibilité', 'compat')}${nav('/calendrier-lunaire/', 'Calendrier lunaire', 'lune')}</nav>
+<nav class="main" aria-label="Rubriques">${nav('/signes/', 'Signes', 'signes')}${nav('/compatibilite/', 'Compatibilité', 'compat')}${nav('/calendrier-lunaire/', 'Calendrier<span class="long"> lunaire</span>', 'lune')}</nav>
 </header>
 <p class="crumbs">${crumbs.map(([name, to], i) => (i === crumbs.length - 1 ? esc(name) : `<a href="${h(to)}">${esc(name)}</a>`)).join(' › ')}</p>
 <main>
@@ -301,7 +301,7 @@ pages.push({
 <h1>Compatibilité entre les signes</h1>
 <p class="lead">Comment deux signes s’accordent en amour, en amitié et au travail, selon la tradition astrologique. Choisissez votre signe, puis celui de l’autre personne.</p>
 ${SIGNES.map(
-  (s) => `<h2 id="${s.slug}"><span aria-hidden="true">${s.symbole}︎</span> ${esc(s.nom)} avec…</h2>
+  (s) => `<h2 id="${s.slug}"><span aria-hidden="true">${s.symbole}\uFE0E</span> ${esc(s.nom)} avec…</h2>
 <p>${SIGNES.map((o) => `<a href="${h(compatPath(s.slug, o.slug))}">${esc(o.nom)}</a>`).join(' · ')}</p>`,
 ).join('\n')}
 <h2>Comment lire une compatibilité ?</h2>
@@ -321,12 +321,12 @@ for (const c of COMPAT) {
     crumbs: [['Accueil', '/'], ['Compatibilité', '/compatibilite/'], [name, path]],
     jsonLd: [faqLd(c.faq)],
     body: (h) => `
-<h1><span aria-hidden="true">${A.symbole}︎ ${B.symbole}︎</span> ${esc(name)} : compatibilité</h1>
+<h1><span aria-hidden="true">${A.slug === B.slug ? `${A.symbole}\uFE0E` : `${A.symbole}\uFE0E ${B.symbole}\uFE0E`}</span> ${esc(name)} : compatibilité</h1>
 <p class="lead">${esc(c.resume)}</p>
 <dl class="facts">
 <div><dt>Affinité</dt><dd>${esc(c.affinite)}</dd></div>
-<div><dt>Éléments</dt><dd>${esc(`${A.element} et ${B.element}`)}</dd></div>
-<div><dt>Modes</dt><dd>${esc(`${A.modalite} et ${B.modalite}`.toLowerCase().replace(/^./, (m) => m.toUpperCase()))}</dd></div>
+<div><dt>Éléments</dt><dd>${esc(A.element === B.element ? A.element : `${A.element} et ${B.element}`)}</dd></div>
+<div><dt>Modes</dt><dd>${esc(A.modalite === B.modalite ? A.modalite : `${A.modalite} et ${B.modalite.toLowerCase()}`)}</dd></div>
 <div><dt>Planètes</dt><dd>${esc(A.slug === B.slug ? A.planete : `${A.planete}, ${B.planete}`)}</dd></div>
 </dl>
 ${c.sections.map((sec) => `<h2>${esc(sec.titre)}</h2>\n${paras(sec.paragraphes)}`).join('\n')}

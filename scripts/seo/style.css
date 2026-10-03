@@ -60,4 +60,4 @@ footer.bottom nav{display:flex;flex-wrap:wrap;gap:6px 16px;margin-bottom:12px}
 footer.bottom a{color:#71717a;text-decoration:none}
 footer.bottom a:hover{color:#d4d4d8}
 @media (min-width:720px){h1{font-size:44px}.grid{grid-template-columns:repeat(3,1fr)}.facts{grid-template-columns:repeat(4,1fr)}}
-@media (max-width:420px){nav.main{gap:12px;font-size:13px}.brand{font-size:21px}}
+@media (max-width:480px){nav.main{gap:12px;font-size:13px}.brand{font-size:21px}nav.main .long{display:none}}
