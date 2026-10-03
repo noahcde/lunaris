@@ -146,7 +146,7 @@ pages.push({
 <h1>Les 12 signes du zodiaque</h1>
 <p class="lead">Votre signe solaire dépend de la position du Soleil le jour de votre naissance. Choisissez le vôtre pour découvrir sa personnalité, ses forces, sa façon de travailler et la manière dont il peut suivre les phases de la Lune.</p>
 <div class="grid">
-${SIGNES.map((s) => `<a class="card" href="${h(`/signes/${s.slug}/`)}"><span class="sym" aria-hidden="true">${s.symbole}</span><strong>${esc(s.nom)}</strong><span>${esc(s.dates)}</span><span>${esc(s.element)} · ${esc(s.planete)}</span></a>`).join('\n')}
+${SIGNES.map((s) => `<a class="card" href="${h(`/signes/${s.slug}/`)}"><span class="sym" aria-hidden="true">${s.symbole}\uFE0E</span><strong>${esc(s.nom)}</strong><span>${esc(s.dates)}</span><span>${esc(s.element)} · ${esc(s.planete)}</span></a>`).join('\n')}
 </div>
 <h2>Comment connaître son signe ?</h2>
 <p>Repérez votre date de naissance dans les dates ci-dessus. Si vous êtes né à la limite entre deux signes, le signe exact dépend de l’heure et du lieu de naissance : Lunaris fait ce calcul pour vous à partir de votre date de naissance.</p>
@@ -173,7 +173,7 @@ for (const s of SIGNES) {
     crumbs: [['Accueil', '/'], ['Signes du zodiaque', '/signes/'], [s.nom, path]],
     jsonLd: [faqLd(s.faq)],
     body: (h) => `
-<h1><span aria-hidden="true">${s.symbole}</span> ${esc(s.nom)}</h1>
+<h1><span aria-hidden="true">${s.symbole}\uFE0E</span> ${esc(s.nom)}</h1>
 <p class="lead">${esc(s.intro)}</p>
 <dl class="facts">
 <div><dt>Dates</dt><dd>${esc(s.dates)}</dd></div>
@@ -258,7 +258,7 @@ events.forEach((e, i) => {
 <dl class="facts">
 <div><dt>Date</dt><dd>${esc(weekday(e.date))} ${esc(dayMonthYear(e.date))}</dd></div>
 <div><dt>Heure (Paris)</dt><dd>${hourMinute(e.date)}</dd></div>
-<div><dt>Signe</dt><dd><a href="${h(`/signes/${s.slug}/`)}">${s.symbole} ${esc(s.nom)}</a></dd></div>
+<div><dt>Signe</dt><dd><a href="${h(`/signes/${s.slug}/`)}">${s.symbole}\uFE0E ${esc(s.nom)}</a></dd></div>
 <div><dt>Phase</dt><dd>${esc(e.phase.nom)}</dd></div>
 </dl>
 <h2>Ce que symbolise cette ${esc(e.phase.nom.toLowerCase())} en ${esc(s.nom)}</h2>
