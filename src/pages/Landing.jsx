@@ -235,6 +235,14 @@ export default function Landing({ onStart, onSignIn, demo }) {
       <DesktopStart onStart={onStart} className="mx-auto mt-16" />
 
       <footer className="mt-14 border-t border-zinc-900 pt-6 lg:mt-20">
+        <nav aria-label="Astrologie" className="mb-3 flex justify-center gap-4 text-xs text-zinc-500">
+          <a href="/signes/" className="transition-colors duration-300 hover:text-zinc-300">
+            Signes du zodiaque
+          </a>
+          <a href="/calendrier-lunaire/" className="transition-colors duration-300 hover:text-zinc-300">
+            Calendrier lunaire
+          </a>
+        </nav>
         <LegalLinks />
         <p className="mt-3 text-center text-[11px] text-zinc-700">© 2026 Lunaris</p>
       </footer>
