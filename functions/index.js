@@ -151,8 +151,18 @@ export const getDaily = onCall(
     const user = (await db.doc(`users/${uid}`).get()).data()
     if (!user?.birthDate) throw new HttpsError('failed-precondition', 'Profil incomplet.')
 
+    // Tâches des 7 jours précédents : l'IA doit en proposer d'autres.
+    const previousDays = [1, 2, 3, 4, 5, 6, 7].map((k) =>
+      new Date(Date.parse(`${date}T12:00:00Z`) - k * 86400000).toISOString().slice(0, 10),
+    )
+    const previous = await db.getAll(...previousDays.map((d) => db.doc(`users/${uid}/daily/${d}`)))
+    const recentTasks = previous.flatMap((d) => (d.exists ? (d.data().tasks ?? []).map((t) => t.title) : []))
+
     try {
       const daily = await generateDaily({
+        uid,
+        date,
+        recentTasks,
         model: OPENAI_MODEL.value(),
         firstName: user.firstName,
         sign: sunSign(user.birthDate),
