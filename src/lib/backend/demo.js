@@ -87,10 +87,10 @@ const SAMPLES = [
       title: 'La clarté naît de l’équilibre.',
       text: 'Votre signe profite d’un ciel apaisé : les échanges sont fluides et les décisions plus nettes. Pesez chaque option une seule fois, puis engagez-vous.',
       sections: [
-        { theme: 'amour', text: 'Vénus adoucit les échanges et rend vos mots plus justes que d’habitude. C’est le bon jour pour dire ce que vous gardez pour vous depuis quelque temps, sans dramatiser. Évitez seulement les sujets sensibles par message : en face, le ton passe mieux. La fin de journée est le moment le plus propice.', tip: 'Proposez un moment à deux ce soir, même court, sans téléphone.' },
-        { theme: 'travail', text: 'Une décision repoussée trouve enfin sa réponse, surtout en fin de matinée où votre esprit est le plus clair. Fiez-vous aux faits plutôt qu’aux avis des autres. Un collègue pourrait tenter de rouvrir un débat déjà tranché : restez courtois mais ferme.', tip: 'Notez la décision et ses deux raisons principales avant midi.' },
-        { theme: 'energie', text: 'Votre énergie est stable le matin mais s’essouffle nettement vers 16 h. Le corps réclame du mouvement plus que du repos. Attention aux grignotages réflexes en milieu d’après-midi, signe de fatigue plus que de faim.', tip: 'Une marche de dix minutes vaut mieux qu’un troisième café.' },
-        { theme: 'interieur', text: 'Le climat du jour vous pousse à chercher l’équilibre entre ce que vous voulez et ce qu’on attend de vous. Une petite culpabilité peut surgir si vous dites non : elle passera vite. Le soir est propice au calme et au recul.', tip: 'Avant de dormir, notez une chose que vous avez bien gérée aujourd’hui.' },
+        { theme: 'amour', text: 'Vénus adoucit les échanges et rend vos mots plus justes que d’habitude. C’est le bon jour pour dire ce que vous gardez pour vous depuis quelque temps, sans dramatiser. Évitez seulement les sujets sensibles par message : en face, le ton passe mieux. La fin de journée est le moment le plus propice.' },
+        { theme: 'travail', text: 'Le climat favorise les décisions, surtout en fin de matinée où l’esprit est plus clair. Si un choix traîne depuis quelque temps, c’est un bon jour pour le trancher en vous fiant aux faits. Prudence avec les débats déjà tranchés : les rouvrir risquerait de vous faire perdre du temps.' },
+        { theme: 'energie', text: 'L’énergie est plutôt stable le matin et pourrait baisser en milieu d’après-midi. Le climat du jour favorise le mouvement plus que l’immobilité. Si la fatigue se fait sentir, elle demande surtout un changement de rythme.' },
+        { theme: 'interieur', text: 'Le climat du jour vous pousse à chercher l’équilibre entre ce que vous voulez et ce qu’on attend de vous. Une petite culpabilité peut surgir si vous dites non : elle passera vite. Le soir est propice au calme et au recul.' },
       ],
     },
     tasks: [
@@ -104,10 +104,10 @@ const SAMPLES = [
       title: 'Avancez par petites touches précises.',
       text: 'L’énergie du jour récompense la méthode plus que l’élan. Fractionnez vos objectifs et terminez ce qui est déjà commencé avant d’ouvrir un nouveau chantier.',
       sections: [
-        { theme: 'argent', text: 'Saturne invite à la rigueur : un abonnement oublié ou une petite dépense répétée mérite d’être revu. Rien d’urgent, mais le tri vous soulagera plus que vous ne le pensez. Évitez les achats impulsifs en soirée, quand la fatigue rend tout plus tentant.', tip: 'Ouvrez vos relevés du mois et repérez une dépense à couper.' },
-        { theme: 'travail', text: 'La méthode paie aujourd’hui plus que l’inspiration. Les tâches longues avancent bien si vous les découpez en étapes courtes. L’après-midi est moins favorable aux réunions : gardez-le pour le travail de fond.', tip: 'Terminez une tâche ouverte avant d’en commencer une nouvelle.' },
-        { theme: 'amities', text: 'Un ami attend peut-être de vos nouvelles sans oser vous relancer. Un message court suffit, la qualité compte plus que la longueur. Les échanges de groupe sont en revanche moins fluides : préférez le tête-à-tête.', tip: 'Envoyez un message à quelqu’un à qui vous pensez sans lui écrire.' },
-        { theme: 'interieur', text: 'La Lune décroissante favorise le lâcher-prise et le tri, au dehors comme au dedans. Acceptez de ne pas tout finir aujourd’hui, vous avancerez mieux demain. Une vieille préoccupation peut refaire surface : regardez-la sans vous y attarder.', tip: 'Fixez une heure de fin de journée et respectez-la.' },
+        { theme: 'argent', text: 'Saturne invite à la rigueur et au tri. Le climat est favorable pour faire le point sur les petites dépenses qui s’accumulent, sans urgence. La soirée se prête moins aux achats : la fatigue pourrait rendre les envies plus pressantes.' },
+        { theme: 'travail', text: 'La méthode paie aujourd’hui plus que l’inspiration. Les tâches longues avancent bien si vous les découpez en étapes courtes. L’après-midi est moins favorable aux réunions : gardez-le pour le travail de fond.' },
+        { theme: 'amities', text: 'Les liens d’amitié sont favorisés, surtout dans les échanges simples et sincères. Si un contact s’est espacé, le moment se prête à le renouer sans effort. Les discussions de groupe pourraient être moins fluides que les tête-à-tête.' },
+        { theme: 'interieur', text: 'La Lune décroissante favorise le lâcher-prise et le tri, au dehors comme au dedans. Acceptez de ne pas tout finir aujourd’hui, vous avancerez mieux demain. Si une ancienne préoccupation refait surface, elle n’appelle pas forcément de réponse immédiate.' },
       ],
     },
     tasks: [

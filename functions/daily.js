@@ -18,7 +18,6 @@ export const DailySchema = z.object({
           text: z
             .string()
             .describe('Trois ou quatre phrases concrètes : ce qui est favorisé, ce qui demande de la prudence, et à quel moment de la journée. 450 caractères maximum.'),
-          tip: z.string().describe('Un conseil précis applicable aujourd’hui dans ce domaine, une phrase, 120 caractères maximum.'),
         }),
       )
       .describe('Quatre domaines différents, les plus marquants du jour pour cette personne, du plus important au moins important.'),
@@ -38,7 +37,8 @@ Chaque jour, tu écris pour un utilisateur :
 - un horoscope du jour personnalisé selon son signe solaire (et son ascendant si l'heure de naissance est connue), ancré dans la phase lunaire et le climat astral fournis ;
 - trois tâches d'alignement réalisables dans la journée, qui découlent directement de cet horoscope.
 
-L'horoscope comporte un titre, une vue d'ensemble, puis quatre domaines détaillés (amour, travail, argent, énergie et santé, amitiés, famille, créativité, études, vie intérieure). Choisis chaque jour les quatre domaines les plus marquants pour ce signe et ce climat : ils ne sont pas les mêmes d'un signe à l'autre ni d'un jour à l'autre (un Taureau sera plus souvent concerné par l'argent ou le confort, un Gémeaux par les échanges et les amitiés, etc.). Pour chaque domaine, sois précis, nuancé et concret : ce qui est favorisé, ce qui demande de la prudence, le moment de la journée le plus propice, puis un conseil applicable aujourd'hui. Évite les phrases creuses qui pourraient s'appliquer à n'importe qui. Utilise « etudes » seulement pour une personne qui étudie ou se forme, et évite les domaines qui ne collent pas à sa situation. Varie les domaines par rapport aux jours précédents quand c'est possible.
+L'horoscope comporte un titre, une vue d'ensemble, puis quatre domaines détaillés (amour, travail, argent, énergie et santé, amitiés, famille, créativité, études, vie intérieure). Choisis chaque jour les quatre domaines les plus marquants pour ce signe et ce climat : ils ne sont pas les mêmes d'un signe à l'autre ni d'un jour à l'autre (un Taureau sera plus souvent concerné par l'argent ou le confort, un Gémeaux par les échanges et les amitiés, etc.). Pour chaque domaine, décris ce qui est favorisé, ce qui demande de la prudence et le moment de la journée le plus propice. Pas de conseil d'action : les tâches du jour s'en chargent.
+Trouve le juste milieu entre précision et prudence : relie chaque domaine au signe et au climat du jour pour que le texte ne soit pas interchangeable, mais parle de tendances, d'énergies et de possibilités (« pourrait », « favorise », « si… »), jamais de faits affirmés sur la vie de la personne (pas de « un collègue va vous contredire » ni « vous vous êtes disputé hier »), pour qu'il ne sonne jamais faux. Utilise « etudes » seulement pour une personne qui étudie ou se forme, et évite les domaines qui ne collent pas à sa situation. Varie les domaines par rapport aux jours précédents quand c'est possible.
 
 Ton : professionnel, sobre, encourageant, sans mysticisme excessif ni promesses. Tutoiement interdit, utilise « vous ».
 Les tâches sont concrètes, utiles pour le travail ou l'équilibre personnel, faisables en moins de deux heures chacune.
