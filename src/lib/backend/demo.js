@@ -87,9 +87,10 @@ const SAMPLES = [
       title: 'La clarté naît de l’équilibre.',
       text: 'Votre signe profite d’un ciel apaisé : les échanges sont fluides et les décisions plus nettes. Pesez chaque option une seule fois, puis engagez-vous.',
       sections: [
-        { theme: 'amour', text: 'Vénus adoucit les échanges : c’est le bon jour pour dire ce que vous gardez pour vous depuis quelque temps. Choisissez un moment calme, en fin de journée.' },
-        { theme: 'travail', text: 'Une décision repoussée trouve sa réponse. Fiez-vous aux faits plutôt qu’aux avis, et évitez de rouvrir un débat déjà tranché.' },
-        { theme: 'energie', text: 'Votre énergie est stable mais s’essouffle vers 16 h. Une marche de dix minutes vaut mieux qu’un troisième café.' },
+        { theme: 'amour', text: 'Vénus adoucit les échanges et rend vos mots plus justes que d’habitude. C’est le bon jour pour dire ce que vous gardez pour vous depuis quelque temps, sans dramatiser. Évitez seulement les sujets sensibles par message : en face, le ton passe mieux. La fin de journée est le moment le plus propice.', tip: 'Proposez un moment à deux ce soir, même court, sans téléphone.' },
+        { theme: 'travail', text: 'Une décision repoussée trouve enfin sa réponse, surtout en fin de matinée où votre esprit est le plus clair. Fiez-vous aux faits plutôt qu’aux avis des autres. Un collègue pourrait tenter de rouvrir un débat déjà tranché : restez courtois mais ferme.', tip: 'Notez la décision et ses deux raisons principales avant midi.' },
+        { theme: 'energie', text: 'Votre énergie est stable le matin mais s’essouffle nettement vers 16 h. Le corps réclame du mouvement plus que du repos. Attention aux grignotages réflexes en milieu d’après-midi, signe de fatigue plus que de faim.', tip: 'Une marche de dix minutes vaut mieux qu’un troisième café.' },
+        { theme: 'interieur', text: 'Le climat du jour vous pousse à chercher l’équilibre entre ce que vous voulez et ce qu’on attend de vous. Une petite culpabilité peut surgir si vous dites non : elle passera vite. Le soir est propice au calme et au recul.', tip: 'Avant de dormir, notez une chose que vous avez bien gérée aujourd’hui.' },
       ],
     },
     tasks: [
@@ -103,9 +104,10 @@ const SAMPLES = [
       title: 'Avancez par petites touches précises.',
       text: 'L’énergie du jour récompense la méthode plus que l’élan. Fractionnez vos objectifs et terminez ce qui est déjà commencé avant d’ouvrir un nouveau chantier.',
       sections: [
-        { theme: 'argent', text: 'Saturne invite à la rigueur : un abonnement oublié ou une petite dépense répétée mérite d’être revu. Rien d’urgent, mais le tri vous soulagera.' },
-        { theme: 'amities', text: 'Un ami attend peut-être de vos nouvelles. Un message court suffit, la qualité compte plus que la longueur.' },
-        { theme: 'interieur', text: 'La Lune décroissante favorise le lâcher-prise. Acceptez de ne pas tout finir aujourd’hui, vous avancerez mieux demain.' },
+        { theme: 'argent', text: 'Saturne invite à la rigueur : un abonnement oublié ou une petite dépense répétée mérite d’être revu. Rien d’urgent, mais le tri vous soulagera plus que vous ne le pensez. Évitez les achats impulsifs en soirée, quand la fatigue rend tout plus tentant.', tip: 'Ouvrez vos relevés du mois et repérez une dépense à couper.' },
+        { theme: 'travail', text: 'La méthode paie aujourd’hui plus que l’inspiration. Les tâches longues avancent bien si vous les découpez en étapes courtes. L’après-midi est moins favorable aux réunions : gardez-le pour le travail de fond.', tip: 'Terminez une tâche ouverte avant d’en commencer une nouvelle.' },
+        { theme: 'amities', text: 'Un ami attend peut-être de vos nouvelles sans oser vous relancer. Un message court suffit, la qualité compte plus que la longueur. Les échanges de groupe sont en revanche moins fluides : préférez le tête-à-tête.', tip: 'Envoyez un message à quelqu’un à qui vous pensez sans lui écrire.' },
+        { theme: 'interieur', text: 'La Lune décroissante favorise le lâcher-prise et le tri, au dehors comme au dedans. Acceptez de ne pas tout finir aujourd’hui, vous avancerez mieux demain. Une vieille préoccupation peut refaire surface : regardez-la sans vous y attarder.', tip: 'Fixez une heure de fin de journée et respectez-la.' },
       ],
     },
     tasks: [

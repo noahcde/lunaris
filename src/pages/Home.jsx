@@ -106,8 +106,8 @@ const THEMES = {
 function InsightSections({ sections }) {
   if (!sections?.length) return null
   return (
-    <ul className="mt-4 space-y-3.5 border-t border-zinc-900 pt-4">
-      {sections.map(({ theme, text }) => {
+    <ul className="mt-4 space-y-5 border-t border-zinc-900 pt-4">
+      {sections.map(({ theme, text, tip }) => {
         const { label, Icon } = THEMES[theme] ?? { label: theme, Icon: Sparkles }
         return (
           <li key={theme}>
@@ -116,6 +116,12 @@ function InsightSections({ sections }) {
               {label}
             </p>
             <p className="mt-1.5 text-sm leading-relaxed text-zinc-400">{text}</p>
+            {tip && (
+              <p className="mt-2 rounded-lg bg-blue-600/[0.08] px-3 py-2 text-[13px] leading-snug text-zinc-300">
+                <span className="font-semibold text-blue-500">Conseil · </span>
+                {tip}
+              </p>
+            )}
           </li>
         )
       })}

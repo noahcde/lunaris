@@ -10,15 +10,18 @@ export const THEMES = ['amour', 'travail', 'argent', 'energie', 'amities', 'fami
 export const DailySchema = z.object({
   insight: z.object({
     title: z.string().describe('Une phrase courte et percutante, 60 caractères maximum.'),
-    text: z.string().describe('Vue d’ensemble du jour, deux phrases, 220 caractères maximum.'),
+    text: z.string().describe('Vue d’ensemble du jour : le climat général, ce qui porte et ce qui freine. Trois phrases, 360 caractères maximum.'),
     sections: z
       .array(
         z.object({
           theme: z.enum(THEMES),
-          text: z.string().describe('Deux ou trois phrases concrètes sur ce domaine, 260 caractères maximum.'),
+          text: z
+            .string()
+            .describe('Trois ou quatre phrases concrètes : ce qui est favorisé, ce qui demande de la prudence, et à quel moment de la journée. 450 caractères maximum.'),
+          tip: z.string().describe('Un conseil précis applicable aujourd’hui dans ce domaine, une phrase, 120 caractères maximum.'),
         }),
       )
-      .describe('Trois domaines différents, les plus marquants du jour pour cette personne.'),
+      .describe('Quatre domaines différents, les plus marquants du jour pour cette personne, du plus important au moins important.'),
   }),
   tasks: z
     .array(
@@ -35,7 +38,7 @@ Chaque jour, tu écris pour un utilisateur :
 - un horoscope du jour personnalisé selon son signe solaire (et son ascendant si l'heure de naissance est connue), ancré dans la phase lunaire et le climat astral fournis ;
 - trois tâches d'alignement réalisables dans la journée, qui découlent directement de cet horoscope.
 
-L'horoscope comporte un titre, une vue d'ensemble, puis trois domaines détaillés (amour, travail, argent, énergie et santé, amitiés, famille, créativité, études, vie intérieure). Choisis chaque jour les trois domaines les plus marquants pour ce signe et ce climat : ils ne sont pas les mêmes d'un signe à l'autre ni d'un jour à l'autre (un Taureau sera plus souvent concerné par l'argent ou le confort, un Gémeaux par les échanges et les amitiés, etc.). Pour chaque domaine, sois précis et concret : ce qui est favorisé, ce qui demande de la prudence, et un conseil applicable aujourd'hui. Utilise « etudes » seulement pour une personne qui étudie ou se forme, et évite les domaines qui ne collent pas à sa situation. Varie les domaines par rapport aux jours précédents quand c'est possible.
+L'horoscope comporte un titre, une vue d'ensemble, puis quatre domaines détaillés (amour, travail, argent, énergie et santé, amitiés, famille, créativité, études, vie intérieure). Choisis chaque jour les quatre domaines les plus marquants pour ce signe et ce climat : ils ne sont pas les mêmes d'un signe à l'autre ni d'un jour à l'autre (un Taureau sera plus souvent concerné par l'argent ou le confort, un Gémeaux par les échanges et les amitiés, etc.). Pour chaque domaine, sois précis, nuancé et concret : ce qui est favorisé, ce qui demande de la prudence, le moment de la journée le plus propice, puis un conseil applicable aujourd'hui. Évite les phrases creuses qui pourraient s'appliquer à n'importe qui. Utilise « etudes » seulement pour une personne qui étudie ou se forme, et évite les domaines qui ne collent pas à sa situation. Varie les domaines par rapport aux jours précédents quand c'est possible.
 
 Ton : professionnel, sobre, encourageant, sans mysticisme excessif ni promesses. Tutoiement interdit, utilise « vous ».
 Les tâches sont concrètes, utiles pour le travail ou l'équilibre personnel, faisables en moins de deux heures chacune.
@@ -112,6 +115,6 @@ export async function generateDaily({ uid, date, recentTasks = [], model, firstN
 
   const daily = response.output_parsed
   if (!daily || daily.tasks.length < 3) throw new Error(`unparsed:${response.status}`)
-  const insight = { ...daily.insight, sections: (daily.insight.sections ?? []).slice(0, 3) }
+  const insight = { ...daily.insight, sections: (daily.insight.sections ?? []).slice(0, 4) }
   return { insight, tasks: daily.tasks.slice(0, 3) }
 }
