@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import { cx, sunSign } from '../lib/astro'
 import Logo from '../components/Logo'
+import { OTHER, OTHER_MAX, SITUATION } from '../lib/quiz'
 
 const inputClass = cx(
   'w-full rounded-xl border border-zinc-900 bg-zinc-950 px-4 py-3 text-[15px] text-white placeholder:text-zinc-600',
@@ -29,6 +30,8 @@ export default function Onboarding({ initial, onSubmit, onCancel }) {
     birthDate: initial.birthDate ?? '',
     birthTime: initial.birthTime ?? '',
     birthTimeUnknown: initial.birthTimeUnknown ?? false,
+    situation: initial.situation ?? '',
+    situationOther: initial.situationOther ?? '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -55,6 +58,12 @@ export default function Onboarding({ initial, onSubmit, onCancel }) {
         birthDate: form.birthDate,
         birthTime: form.birthTimeUnknown ? null : form.birthTime,
         birthTimeUnknown: form.birthTimeUnknown,
+        ...(form.situation && {
+          quiz: {
+            situation: form.situation,
+            situationOther: form.situation === OTHER ? form.situationOther.trim().slice(0, OTHER_MAX) : null,
+          },
+        }),
       })
     } catch {
       setError('L’enregistrement a échoué. Réessayez dans un instant.')
@@ -128,6 +137,27 @@ export default function Onboarding({ initial, onSubmit, onCancel }) {
           />
           Je ne connais pas mon heure de naissance
         </label>
+
+        <Field id="situation" label="Votre situation" hint="Elle permet d’adapter vos actions du jour à votre quotidien.">
+          <select id="situation" className={cx(inputClass, '[color-scheme:dark]')} value={form.situation} onChange={set('situation')}>
+            <option value="">Choisir…</option>
+            {SITUATION.options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          {form.situation === OTHER && (
+            <input
+              aria-label="Précisez votre situation"
+              className={cx(inputClass, 'mt-2')}
+              value={form.situationOther}
+              onChange={set('situationOther')}
+              maxLength={OTHER_MAX}
+              placeholder="Précisez"
+            />
+          )}
+        </Field>
 
         <div
           className={cx(

@@ -8,6 +8,19 @@ const otherOption = { value: OTHER, label: 'Autre' }
 
 export const QUESTIONS = [
   {
+    id: 'situation',
+    title: 'Quelle est votre situation ?',
+    options: [
+      { value: 'etudiant', label: 'Étudiant·e' },
+      { value: 'salarie', label: 'Salarié·e' },
+      { value: 'independant', label: 'Indépendant·e ou entrepreneur·e' },
+      { value: 'recherche', label: 'En recherche d’emploi' },
+      { value: 'parent', label: 'Parent au foyer' },
+      { value: 'retraite', label: 'Retraité·e' },
+      otherOption,
+    ],
+  },
+  {
     id: 'focus',
     title: 'Qu’est-ce qui vous occupe le plus en ce moment ?',
     options: [
@@ -53,6 +66,8 @@ export const QUESTIONS = [
 ]
 
 export const otherKey = (questionId) => `${questionId}Other`
+
+export const SITUATION = QUESTIONS[0]
 
 // Libellé d'une réponse : le texte tapé pour « Autre », sinon le libellé de l'option choisie.
 export function answerLabel(answers, questionId) {

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { CreditCard, Download, LogOut, Pencil, RotateCcw, Sparkles, X } from 'lucide-react'
 import { cx, sunSign } from '../lib/astro'
 import { LegalLinks } from '../pages/LegalPage'
+import { answerLabel } from '../lib/quiz'
 
 const formatBirth = (profile) => {
   const [y, m, d] = profile.birthDate.split('-').map(Number)
@@ -95,6 +96,7 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
         <div className="mt-4 divide-y divide-zinc-900 border-y border-zinc-900">
           <Row label="Signe solaire" value={sunSign(profile.birthDate)} />
           <Row label="Naissance" value={formatBirth(profile)} />
+          <Row label="Situation" value={answerLabel(profile, 'situation') ?? 'Non renseignée'} />
           <Row label="Série en cours" value={`${streak.current} ${streak.current > 1 ? 'jours' : 'jour'} · record ${streak.best}`} />
           <Row label="Abonnement" value={billingLabel(billing)} />
         </div>

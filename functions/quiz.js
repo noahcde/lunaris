@@ -2,6 +2,17 @@
 // Les valeurs connues sont traduites en libellés. La réponse libre « Autre » est nettoyée, limitée à 80 caractères
 // et présentée à l'IA entre guillemets comme une simple description de la personne.
 const LABELS = {
+  situation: {
+    label: 'Situation',
+    values: {
+      etudiant: 'étudiant·e',
+      salarie: 'salarié·e',
+      independant: 'indépendant·e ou entrepreneur·e',
+      recherche: 'en recherche d’emploi',
+      parent: 'parent au foyer',
+      retraite: 'retraité·e',
+    },
+  },
   focus: {
     label: 'Ce qui l’occupe le plus en ce moment',
     values: {

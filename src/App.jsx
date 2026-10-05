@@ -247,7 +247,10 @@ export default function App() {
   // Le questionnaire rempli avant la connexion est enregistré sur le compte avec le profil.
   const saveProfile = async (profile) => {
     const { birthDate: _birthDate, ...answers } = quiz ?? {}
-    const full = quiz && !data.quiz ? { ...profile, quiz: answers } : profile
+    const previous = quiz && !data.quiz ? answers : data.quiz
+    // La situation, modifiable dans le profil, est rangée avec les réponses du questionnaire.
+    const merged = previous || profile.quiz ? { ...previous, ...profile.quiz } : undefined
+    const full = merged ? { ...profile, quiz: merged } : profile
     await backend.saveUserData(user.uid, full)
     setData((prev) => ({ ...prev, ...full }))
     setEditingProfile(false)
@@ -367,6 +370,8 @@ export default function App() {
     birthDate: data.birthDate ?? quiz?.birthDate,
     birthTime: data.birthTime,
     birthTimeUnknown: data.birthTimeUnknown,
+    situation: data.quiz?.situation ?? quiz?.situation,
+    situationOther: data.quiz?.situationOther ?? quiz?.situationOther,
   }
 
   const locked = daily.status === 'locked' || billing?.active === false

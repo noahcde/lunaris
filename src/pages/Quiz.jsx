@@ -139,6 +139,7 @@ function Result({ answers, onContinue }) {
   const moon = getMoonPhase(new Date());
   const rows = [
     ["Signe solaire", sign],
+    ["Votre situation", answerLabel(answers, "situation")],
     ["Votre priorité", answerLabel(answers, "focus")],
     ["Votre période", answerLabel(answers, "period")],
     ["Lune du jour", moon.name],
@@ -203,13 +204,15 @@ function Result({ answers, onContinue }) {
 
 export default function Quiz({ initial, onBack, onComplete }) {
   const [answers, setAnswers] = useState(initial ?? {});
-  const [step, setStep] = useState(0); // 0..3 questions, 4 date de naissance, 5 analyse, 6 résultat
+  // 0..N-1 questions, N date de naissance, N+1 analyse, N+2 résultat
+  const [step, setStep] = useState(0);
   const total = QUESTIONS.length + 1;
+  const ANALYSIS = QUESTIONS.length + 1;
 
   const back = () => (step === 0 ? onBack() : setStep((s) => s - 1));
 
-  if (step === 5) return <Analysis onDone={() => setStep(6)} />;
-  if (step === 6)
+  if (step === ANALYSIS) return <Analysis onDone={() => setStep(ANALYSIS + 1)} />;
+  if (step === ANALYSIS + 1)
     return <Result answers={answers} onContinue={() => onComplete(answers)} />;
 
   const question = QUESTIONS[step];
@@ -331,7 +334,7 @@ export default function Quiz({ initial, onBack, onComplete }) {
           className="mt-10 flex flex-1 animate-page-in flex-col justify-between lg:mt-20 lg:flex-none lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-16"
           onSubmit={(e) => {
             e.preventDefault();
-            if (sign) setStep(5);
+            if (sign) setStep(ANALYSIS);
           }}
         >
           <div className="lg:contents">
