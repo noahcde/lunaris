@@ -4,10 +4,21 @@ import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
 import { quizLines } from './quiz.js'
 
+// Domaines possibles de l'horoscope détaillé (les clés sont reprises par l'app pour les icônes).
+export const THEMES = ['amour', 'travail', 'argent', 'energie', 'amities', 'famille', 'creativite', 'etudes', 'interieur']
+
 export const DailySchema = z.object({
   insight: z.object({
     title: z.string().describe('Une phrase courte et percutante, 60 caractères maximum.'),
-    text: z.string().describe('Deux ou trois phrases, 280 caractères maximum.'),
+    text: z.string().describe('Vue d’ensemble du jour, deux phrases, 220 caractères maximum.'),
+    sections: z
+      .array(
+        z.object({
+          theme: z.enum(THEMES),
+          text: z.string().describe('Deux ou trois phrases concrètes sur ce domaine, 260 caractères maximum.'),
+        }),
+      )
+      .describe('Trois domaines différents, les plus marquants du jour pour cette personne.'),
   }),
   tasks: z
     .array(
@@ -23,6 +34,8 @@ const SYSTEM = `Tu es l'astrologue de l'application Lunaris, qui relie l'astrolo
 Chaque jour, tu écris pour un utilisateur :
 - un horoscope du jour personnalisé selon son signe solaire (et son ascendant si l'heure de naissance est connue), ancré dans la phase lunaire et le climat astral fournis ;
 - trois tâches d'alignement réalisables dans la journée, qui découlent directement de cet horoscope.
+
+L'horoscope comporte un titre, une vue d'ensemble, puis trois domaines détaillés (amour, travail, argent, énergie et santé, amitiés, famille, créativité, études, vie intérieure). Choisis chaque jour les trois domaines les plus marquants pour ce signe et ce climat : ils ne sont pas les mêmes d'un signe à l'autre ni d'un jour à l'autre (un Taureau sera plus souvent concerné par l'argent ou le confort, un Gémeaux par les échanges et les amitiés, etc.). Pour chaque domaine, sois précis et concret : ce qui est favorisé, ce qui demande de la prudence, et un conseil applicable aujourd'hui. Utilise « etudes » seulement pour une personne qui étudie ou se forme, et évite les domaines qui ne collent pas à sa situation. Varie les domaines par rapport aux jours précédents quand c'est possible.
 
 Ton : professionnel, sobre, encourageant, sans mysticisme excessif ni promesses. Tutoiement interdit, utilise « vous ».
 Les tâches sont concrètes, utiles pour le travail ou l'équilibre personnel, faisables en moins de deux heures chacune.
@@ -99,5 +112,6 @@ export async function generateDaily({ uid, date, recentTasks = [], model, firstN
 
   const daily = response.output_parsed
   if (!daily || daily.tasks.length < 3) throw new Error(`unparsed:${response.status}`)
-  return { insight: daily.insight, tasks: daily.tasks.slice(0, 3) }
+  const insight = { ...daily.insight, sections: (daily.insight.sections ?? []).slice(0, 3) }
+  return { insight, tasks: daily.tasks.slice(0, 3) }
 }

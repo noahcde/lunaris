@@ -86,6 +86,11 @@ const SAMPLES = [
     insight: {
       title: 'La clarté naît de l’équilibre.',
       text: 'Votre signe profite d’un ciel apaisé : les échanges sont fluides et les décisions plus nettes. Pesez chaque option une seule fois, puis engagez-vous.',
+      sections: [
+        { theme: 'amour', text: 'Vénus adoucit les échanges : c’est le bon jour pour dire ce que vous gardez pour vous depuis quelque temps. Choisissez un moment calme, en fin de journée.' },
+        { theme: 'travail', text: 'Une décision repoussée trouve sa réponse. Fiez-vous aux faits plutôt qu’aux avis, et évitez de rouvrir un débat déjà tranché.' },
+        { theme: 'energie', text: 'Votre énergie est stable mais s’essouffle vers 16 h. Une marche de dix minutes vaut mieux qu’un troisième café.' },
+      ],
     },
     tasks: [
       { title: 'Trancher une décision en attente', hint: 'La Lune éclaire ce que vous repoussez.' },
@@ -97,6 +102,11 @@ const SAMPLES = [
     insight: {
       title: 'Avancez par petites touches précises.',
       text: 'L’énergie du jour récompense la méthode plus que l’élan. Fractionnez vos objectifs et terminez ce qui est déjà commencé avant d’ouvrir un nouveau chantier.',
+      sections: [
+        { theme: 'argent', text: 'Saturne invite à la rigueur : un abonnement oublié ou une petite dépense répétée mérite d’être revu. Rien d’urgent, mais le tri vous soulagera.' },
+        { theme: 'amities', text: 'Un ami attend peut-être de vos nouvelles. Un message court suffit, la qualité compte plus que la longueur.' },
+        { theme: 'interieur', text: 'La Lune décroissante favorise le lâcher-prise. Acceptez de ne pas tout finir aujourd’hui, vous avancerez mieux demain.' },
+      ],
     },
     tasks: [
       { title: 'Finir une tâche commencée hier', hint: 'Saturne soutient la persévérance.' },

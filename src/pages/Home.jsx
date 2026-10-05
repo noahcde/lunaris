@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
-import { Sparkles, Check, Moon, Zap, ChevronRight } from 'lucide-react'
+import {
+  Sparkles, Check, Moon, Zap, ChevronRight, Heart, Briefcase, Wallet, Activity, Users, House, Palette, GraduationCap, Compass,
+} from 'lucide-react'
 import DayDetail from '../components/DayDetail'
 import StreakCard from '../components/StreakCard'
 import { Avatar } from '../components/ProfileSheet'
@@ -77,12 +79,49 @@ function Skeleton({ className }) {
 const LOCKED_INSIGHT = {
   title: 'Une journée propice aux décisions claires.',
   text: 'Le ciel du jour éclaire vos priorités et met en lumière une énergie à canaliser. Votre signe trouve un appui inattendu dans les échanges de l’après-midi.',
+  sections: [
+    { theme: 'amour', text: 'Un échange sincère rapproche. Laissez la conversation venir sans la forcer, la douceur paie davantage aujourd’hui.' },
+    { theme: 'travail', text: 'Une piste se précise en fin de matinée. Notez-la avant qu’elle ne s’efface et gardez-la pour demain.' },
+  ],
 }
 const LOCKED_TASKS = [
   { title: 'Clarifier une priorité du jour', hint: 'Le ciel soutient votre concentration.' },
   { title: 'Reprendre contact avec un proche', hint: 'Les échanges sont favorisés.' },
   { title: 'Prendre dix minutes de recul', hint: 'La Lune invite à ralentir.' },
 ]
+
+// Domaines de l'horoscope détaillé, choisis chaque jour par l'IA (voir functions/daily.js).
+const THEMES = {
+  amour: { label: 'Amour', Icon: Heart },
+  travail: { label: 'Travail', Icon: Briefcase },
+  argent: { label: 'Argent', Icon: Wallet },
+  energie: { label: 'Énergie et santé', Icon: Activity },
+  amities: { label: 'Amitiés', Icon: Users },
+  famille: { label: 'Famille', Icon: House },
+  creativite: { label: 'Créativité', Icon: Palette },
+  etudes: { label: 'Études', Icon: GraduationCap },
+  interieur: { label: 'Vie intérieure', Icon: Compass },
+}
+
+function InsightSections({ sections }) {
+  if (!sections?.length) return null
+  return (
+    <ul className="mt-4 space-y-3.5 border-t border-zinc-900 pt-4">
+      {sections.map(({ theme, text }) => {
+        const { label, Icon } = THEMES[theme] ?? { label: theme, Icon: Sparkles }
+        return (
+          <li key={theme}>
+            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-300">
+              <Icon className="h-3.5 w-3.5 text-blue-600" strokeWidth={2.25} />
+              {label}
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-zinc-400">{text}</p>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
 
 function CosmicInsight({ daily, sign, onRetry, trialAvailable, onUnlock }) {
   return (
@@ -104,6 +143,7 @@ function CosmicInsight({ daily, sign, onRetry, trialAvailable, onUnlock }) {
         <>
           <h2 className="mt-3 text-[17px] font-semibold leading-snug text-white">{daily.insight.title}</h2>
           <p className="mt-2 text-sm leading-relaxed text-zinc-400">{daily.insight.text}</p>
+          <InsightSections sections={daily.insight.sections} />
         </>
       )}
 
@@ -112,6 +152,7 @@ function CosmicInsight({ daily, sign, onRetry, trialAvailable, onUnlock }) {
           <div aria-hidden="true" className={LOCKED_TEXT}>
             <h2 className="mt-3 text-[17px] font-semibold leading-snug text-white">{LOCKED_INSIGHT.title}</h2>
             <p className="mt-2 text-sm leading-relaxed text-zinc-400">{LOCKED_INSIGHT.text}</p>
+            <InsightSections sections={LOCKED_INSIGHT.sections} />
           </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
             <p className="text-sm font-medium text-white">Votre horoscope du jour vous attend.</p>
