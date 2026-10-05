@@ -172,7 +172,9 @@ export async function enableNotifications(_uid, hour, minute = 0) {
   return settings
 }
 
-export async function refreshNotifications() {}
+export async function refreshNotifications() {
+  return { needsTap: false }
+}
 
 export async function sendTestNotification() {
   await new Promise((r) => setTimeout(r, 600))

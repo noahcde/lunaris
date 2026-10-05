@@ -14,14 +14,22 @@ self.addEventListener('push', (event) => {
   }
   const n = payload.notification ?? {}
   const link = payload.fcmOptions?.link ?? n.click_action ?? '/#accueil'
+  // L'heure de réception est notée : l'app s'en sert pour repérer une notification envoyée mais jamais reçue.
+  const received = caches
+    .open('lunaris-push')
+    .then((cache) => cache.put('/derniere-notification', new Response(String(Date.now()))))
+    .catch(() => {})
   event.waitUntil(
-    self.registration.showNotification(n.title ?? 'Lunaris', {
-      body: n.body ?? 'Votre horoscope du jour est prêt ✨',
-      icon: n.icon ?? '/lunaris-192.png',
-      badge: '/lunaris-192.png',
-      tag: 'lunaris-matin',
-      data: { link },
-    }),
+    Promise.all([
+      self.registration.showNotification(n.title ?? 'Lunaris', {
+        body: n.body ?? 'Votre horoscope du jour est prêt ✨',
+        icon: n.icon ?? '/lunaris-192.png',
+        badge: '/lunaris-192.png',
+        tag: 'lunaris-matin',
+        data: { link },
+      }),
+      received,
+    ]),
   )
 })
 

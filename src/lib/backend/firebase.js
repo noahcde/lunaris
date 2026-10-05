@@ -14,7 +14,7 @@ import {
   signInWithRedirect,
   signOut as fbSignOut,
 } from 'firebase/auth'
-import { arrayUnion, doc, getDoc, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore'
+import { arrayRemove, arrayUnion, doc, getDoc, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import { nextSendAt } from '../schedule'
 import { getMessaging, getToken, isSupported as messagingSupported } from 'firebase/messaging'
@@ -117,7 +117,7 @@ export async function openBillingPortal() {
 }
 
 // Notifications du matin : autorisation du navigateur, jeton de l'appareil enregistré sur le compte.
-// L'envoi est fait chaque heure par le serveur (functions/notify.js) aux personnes dont c'est l'heure choisie.
+// L'envoi est fait chaque minute par le serveur (functions/notify.js) aux personnes dont c'est l'heure choisie.
 // Erreurs possibles (err.code) : 'unsupported', 'denied'.
 export const notificationsAvailable = Boolean(VAPID_KEY)
 
@@ -144,15 +144,75 @@ async function deviceToken() {
   return getToken(getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
 }
 
+// Jeton de cet appareil (pour retirer l'ancien du compte quand il change)
+// et dernière réactivation réussie des notifications sur cet appareil.
+const TOKEN_KEY = 'lunaris-push-token'
+const ENABLED_AT_KEY = 'lunaris-push-enabled-at'
+const remember = (key, value) => {
+  try {
+    const previous = localStorage.getItem(key)
+    localStorage.setItem(key, value)
+    return previous
+  } catch {
+    return null
+  }
+}
+
+async function saveToken(uid, token) {
+  const ref = doc(db, 'users', uid)
+  await setDoc(ref, { notifications: { tokens: arrayUnion(token) } }, { merge: true })
+  const previous = remember(TOKEN_KEY, token)
+  if (previous && previous !== token) {
+    await setDoc(ref, { notifications: { tokens: arrayRemove(previous) } }, { merge: true }).catch(() => {})
+  }
+}
+
+const dateIn = (timeZone, ms) => new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(ms))
+
+// Heure (ms) de la dernière notification reçue par cet appareil, notée par le service worker.
+async function lastPushReceived() {
+  try {
+    const res = await (await caches.open('lunaris-push')).match('/derniere-notification')
+    return res ? Number(await res.text()) || 0 : 0
+  } catch {
+    return 0
+  }
+}
+
+// Le serveur a envoyé la notification aujourd'hui mais cet appareil ne l'a pas reçue :
+// l'iPhone a perdu l'abonnement (souvent après une mise à jour du site) et seul un toucher peut le recréer.
+async function missedToday(uid, timeZone) {
+  const snap = await getDoc(doc(db, 'users', uid))
+  const today = dateIn(timeZone, Date.now())
+  if (snap.data()?.notifications?.lastSent !== today) return false
+  let enabledAt = 0
+  try {
+    enabledAt = Number(localStorage.getItem(ENABLED_AT_KEY)) || 0
+  } catch {
+    // stockage indisponible : on ne regarde que la dernière notification reçue
+  }
+  const lastOk = Math.max(await lastPushReceived(), enabledAt)
+  return !lastOk || dateIn(timeZone, lastOk) !== today
+}
+
 // À chaque ouverture : si les notifications sont autorisées, on renvoie le jeton (il peut changer).
 // La date du prochain envoi est recalculée au passage (heure d'été, changement de fuseau…).
+// Renvoie { needsTap: true } quand l'abonnement de cet appareil est perdu : l'app propose alors « Réactiver ».
 export async function refreshNotifications(uid, settings) {
   const timeZone = localTimeZone()
   await setDoc(doc(db, 'users', uid), { notifications: { timeZone, nextSendAt: nextSendAt({ ...settings, timeZone }) } }, { merge: true })
-  if (!VAPID_KEY || !('Notification' in window) || Notification.permission !== 'granted') return
-  if (!(await messagingSupported().catch(() => false))) return
-  const token = await deviceToken()
-  await setDoc(doc(db, 'users', uid), { notifications: { tokens: arrayUnion(token) } }, { merge: true })
+  if (!VAPID_KEY || !('Notification' in window)) return { needsTap: false }
+  if (Notification.permission === 'default') return { needsTap: true }
+  if (Notification.permission !== 'granted') return { needsTap: false }
+  if (!(await messagingSupported().catch(() => false))) return { needsTap: false }
+  let token
+  try {
+    token = await deviceToken()
+  } catch {
+    return { needsTap: true }
+  }
+  await saveToken(uid, token)
+  return { needsTap: await missedToday(uid, timeZone).catch(() => false) }
 }
 
 export async function enableNotifications(uid, hour, minute = 0) {
@@ -165,9 +225,11 @@ export async function enableNotifications(uid, hour, minute = 0) {
   const settings = { enabled: true, hour, minute, timeZone: localTimeZone() }
   await setDoc(
     doc(db, 'users', uid),
-    { notifications: { ...settings, nextSendAt: nextSendAt(settings), tokens: arrayUnion(token) }, updatedAt: serverTimestamp() },
+    { notifications: { ...settings, nextSendAt: nextSendAt(settings) }, updatedAt: serverTimestamp() },
     { merge: true },
   )
+  await saveToken(uid, token)
+  remember(ENABLED_AT_KEY, String(Date.now()))
   return settings
 }
 

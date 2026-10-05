@@ -15,6 +15,7 @@ import { loadQuiz, saveQuiz } from './lib/quiz'
 import Logo from './components/Logo'
 import InstallGuide from './components/InstallGuide'
 import NotificationSettings from './components/NotificationSettings'
+import NotificationsPaused from './components/NotificationsPaused'
 import { isStandalone } from './lib/pwa'
 import { nextSendAt } from './lib/schedule'
 import LegalPage from './pages/LegalPage'
@@ -146,6 +147,7 @@ export default function App() {
 
   // Notifications activées : à chaque ouverture, on met à jour le service worker et le jeton de l'appareil.
   const notificationsOn = Boolean(data?.notifications?.enabled)
+  const [notificationsPaused, setNotificationsPaused] = useState(false)
   const notificationsRef = useRef(data?.notifications)
   notificationsRef.current = data?.notifications
   useEffect(() => {
@@ -157,9 +159,15 @@ export default function App() {
       if (document.visibilityState !== 'visible' || Date.now() - last < 600000) return
       last = Date.now()
       const { hour, minute } = notificationsRef.current ?? {}
-      backend.refreshNotifications(user.uid, { hour, minute }).catch(() => {
-        last = 0
-      })
+      backend
+        .refreshNotifications(user.uid, { hour, minute })
+        .then((res) => {
+          setNotificationsPaused(Boolean(res?.needsTap))
+          if (res?.needsTap) last = 0
+        })
+        .catch(() => {
+          last = 0
+        })
     }
     refresh()
     document.addEventListener('visibilitychange', refresh)
@@ -276,6 +284,7 @@ export default function App() {
   // Notifications du matin : réglage enregistré sur le compte, envoi par le serveur à l'heure choisie.
   const enableNotifications = async (hour, minute) => {
     const settings = await backend.enableNotifications(user.uid, hour, minute)
+    setNotificationsPaused(false)
     setData((prev) => ({ ...prev, notifications: { ...prev.notifications, ...settings } }))
   }
   const updateNotifications = (partial) => {
@@ -392,6 +401,11 @@ export default function App() {
     <div className="min-h-screen bg-black font-sans text-zinc-400">
       {/* data-clarity-mask : contenu personnel masqué dans les enregistrements de Clarity */}
       <main key={page} data-clarity-mask="true" className="mx-auto flex w-full max-w-md animate-page-in flex-col gap-7 px-5 pb-32 lg:max-w-5xl lg:px-10">
+        {page === 'accueil' && notificationsPaused && notificationsOn && (
+          <NotificationsPaused
+            onReactivate={() => enableNotifications(data.notifications?.hour ?? 8, data.notifications?.minute ?? 0)}
+          />
+        )}
         {page === 'accueil' ? (
           <Home
             today={today}
