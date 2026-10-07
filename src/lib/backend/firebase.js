@@ -14,7 +14,7 @@ import {
   signInWithRedirect,
   signOut as fbSignOut,
 } from 'firebase/auth'
-import { arrayRemove, arrayUnion, doc, getDoc, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore'
+import { arrayRemove, arrayUnion, deleteField, doc, getDoc, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore'
 import { getFunctions, httpsCallable } from 'firebase/functions'
 import { nextSendAt } from '../schedule'
 import { getMessaging, getToken, isSupported as messagingSupported } from 'firebase/messaging'
@@ -158,12 +158,14 @@ const remember = (key, value) => {
   }
 }
 
+// L'adresse du site (lunaris-app.fr, horoscope-55ff8.web.app…) est gardée avec chaque appareil :
+// un toucher sur la notification rouvre le même site, là où la personne est connectée.
 async function saveToken(uid, token) {
   const ref = doc(db, 'users', uid)
-  await setDoc(ref, { notifications: { tokens: arrayUnion(token) } }, { merge: true })
+  await setDoc(ref, { notifications: { tokens: arrayUnion(token), origins: { [token]: location.origin } } }, { merge: true })
   const previous = remember(TOKEN_KEY, token)
   if (previous && previous !== token) {
-    await setDoc(ref, { notifications: { tokens: arrayRemove(previous) } }, { merge: true }).catch(() => {})
+    await setDoc(ref, { notifications: { tokens: arrayRemove(previous), origins: { [previous]: deleteField() } } }, { merge: true }).catch(() => {})
   }
 }
 
