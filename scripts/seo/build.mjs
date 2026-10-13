@@ -18,7 +18,7 @@ const OUT = process.env.SEO_OUT ?? join(ROOT, 'dist')
 const PREVIEW = process.env.SEO_PREVIEW === '1'
 const SITE = 'https://lunaris-app.fr'
 const TZ = 'Europe/Paris'
-const YEARS = [2026, 2027]
+const YEARS = [2026, 2027, 2028]
 const today = new Date()
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -57,6 +57,11 @@ for (const e of events) {
   e.path = `/calendrier-lunaire/${e.type}-lune-${day}${plain(monthName(e.date))}-${yearOf(e.date)}/`
   e.label = `${e.phase.nom} du ${dayMonthYear(e.date)}`
 }
+
+// Page de toutes les nouvelles (ou pleines) lunes d'une année : /calendrier-lunaire/nouvelle-lune-2027/
+const hubPath = (type, y) => `/calendrier-lunaire/${type}-lune-${y}/`
+const plural = (nom) => nom.toLowerCase().replace(/^(\w+) lune$/, '$1s lunes')
+const yearList = (ys) => (ys.length > 1 ? `${ys.slice(0, -1).join(', ')} et ${ys.at(-1)}` : `${ys[0]}`)
 
 // ---------- Gabarit ----------
 
@@ -222,16 +227,17 @@ const nextEvent = upcoming[0]
 pages.push({
   path: '/calendrier-lunaire/',
   section: 'lune',
-  title: `Calendrier lunaire ${YEARS.join(' et ')} : pleines et nouvelles lunes | Lunaris`,
-  description: `Toutes les dates et heures des pleines lunes et nouvelles lunes de ${YEARS.join(' et ')} (heure de Paris), le signe où elles tombent et comment en profiter.`,
+  title: `Calendrier lunaire ${yearList(YEARS)} : pleines et nouvelles lunes | Lunaris`,
+  description: `Toutes les dates et heures des pleines lunes et nouvelles lunes de ${yearList(YEARS)} (heure de Paris), le signe où elles tombent et comment en profiter.`,
   crumbs: [['Accueil', '/'], ['Calendrier lunaire', '/calendrier-lunaire/']],
   jsonLd: [faqLd(FAQ_LUNE)],
   body: (h) => `
-<h1>Calendrier lunaire ${YEARS.join(' et ')}</h1>
+<h1>Calendrier lunaire ${yearList(YEARS)}</h1>
 <p class="lead">Les dates et heures exactes (heure de Paris) de chaque nouvelle lune et pleine lune, le signe du zodiaque dans lequel elle se forme, et des idées concrètes pour en tirer parti.</p>
 ${nextEvent ? `<p>Prochaine lune : <a href="${h(nextEvent.path)}">${esc(nextEvent.label)} en ${esc(nextEvent.signe.nom)}</a>, à ${hourMinute(nextEvent.date)}.</p>` : ''}
 ${YEARS.map(
   (y) => `<h2>Pleines et nouvelles lunes ${y}</h2>
+<p>Voir seulement les <a href="${h(hubPath('nouvelle', y))}">nouvelles lunes ${y}</a> ou les <a href="${h(hubPath('pleine', y))}">pleines lunes ${y}</a>.</p>
 <table>
 <thead><tr><th>Date</th><th>Heure</th><th>Signe</th></tr></thead>
 <tbody>
@@ -262,7 +268,7 @@ events.forEach((e, i) => {
   const txt = LUNE_EN[e.sign][e.type]
   const prev = events[i - 1]
   const next = events[i + 1]
-  const title = `${e.phase.nom} ${monthName(e.date)} ${yearOf(e.date)} en ${s.nom} : date, heure et sens | Lunaris`
+  const title = `${e.phase.nom} en ${s.nom} ${monthName(e.date)} ${yearOf(e.date)} : date, heure et sens | Lunaris`
   pages.push({
     path: e.path,
     section: 'lune',
@@ -286,9 +292,72 @@ ${paras(txt.texte)}
 <p>${esc(e.phase.intro)}</p>
 <ul class="list">${e.phase.conseils.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
 <div class="pager">${prev ? `<a href="${h(prev.path)}">← ${esc(prev.label)}</a>` : '<span></span>'}${next ? `<a href="${h(next.path)}">${esc(next.label)} →</a>` : '<span></span>'}</div>
-<p style="margin-top:20px"><a href="${h('/calendrier-lunaire/')}">Voir tout le calendrier lunaire</a></p>`,
+<p style="margin-top:20px"><a href="${h(hubPath(e.type, yearOf(e.date)))}">Toutes les ${esc(plural(e.phase.nom))} ${yearOf(e.date)}</a> · <a href="${h('/calendrier-lunaire/')}">Tout le calendrier lunaire</a></p>`,
   })
 })
+
+// Une page par type de lune et par année, pour les recherches « nouvelle lune 2027 », « pleine lune 2026 »…
+for (const y of YEARS) {
+  for (const type of ['nouvelle', 'pleine']) {
+    const ph = PHASES[type]
+    const list = events.filter((e) => e.type === type && yearOf(e.date) === y)
+    const nom = ph.nom.toLowerCase()
+    const noms = plural(ph.nom)
+    const other = type === 'nouvelle' ? 'pleine' : 'nouvelle'
+    const months = {}
+    for (const e of list) (months[monthName(e.date)] ??= []).push(e)
+    const doubles = Object.entries(months).filter(([, l]) => l.length > 1)
+    const faq = [
+      {
+        q: `Combien y a-t-il de ${noms} en ${y} ?`,
+        a: `On compte ${list.length} ${noms} en ${y}, de la première le ${dayMonthYear(list[0].date)} en ${list[0].signe.nom} à la dernière le ${dayMonthYear(list.at(-1).date)} en ${list.at(-1).signe.nom}.${doubles.length ? ` ${doubles.map(([m]) => (/^[aeiou]/.test(m) ? `Le mois d’${m}` : `Le mois de ${m}`)).join(' et ')} en compte deux.` : ''}`,
+      },
+      ...list.map((e) => ({
+        q: `Quand est la ${nom} de ${monthName(e.date)} ${y}${months[monthName(e.date)].length > 1 ? ` (${fmt(e.date, { day: 'numeric' })})` : ''} ?`,
+        a: `La ${nom} a lieu le ${weekday(e.date)} ${dayMonthYear(e.date)} à ${hourMinute(e.date)} (heure de Paris), en ${e.signe.nom}. ${LUNE_EN[e.sign][type].theme}.`,
+      })),
+    ]
+    pages.push({
+      path: hubPath(type, y),
+      section: 'lune',
+      title: `${ph.nom} ${y} : toutes les dates, heures et signes | Lunaris`,
+      description: `Les ${list.length} ${noms} de ${y} : date, heure exacte (Paris) et signe de chacune, de ${monthName(list[0].date)} à ${monthName(list.at(-1).date)}, avec leur sens et des idées pour en profiter.`,
+      crumbs: [['Accueil', '/'], ['Calendrier lunaire', '/calendrier-lunaire/'], [`${ph.nom} ${y}`, hubPath(type, y)]],
+      jsonLd: [faqLd(faq)],
+      body: (h) => `
+<h1>${esc(ph.nom)} ${y} : toutes les dates</h1>
+<p class="lead">Les ${list.length} ${esc(noms)} de ${y}, avec la date, l’heure exacte (heure de Paris) et le signe du zodiaque où chacune se forme. Cliquez sur une date pour lire son sens et 3 actions concrètes.</p>
+<table>
+<thead><tr><th>Date</th><th>Heure</th><th>Signe</th></tr></thead>
+<tbody>
+${list
+  .map(
+    (e) =>
+      `<tr data-t="${e.date.getTime()}"><td><span class="phase-dot dot-${type}" aria-hidden="true"></span><a href="${h(e.path)}">${esc(fmt(e.date, { weekday: 'long', day: 'numeric', month: 'long' }))}</a></td><td>${hourMinute(e.date)}</td><td><a href="${h(`/signes/${e.signe.slug}/`)}">${esc(e.signe.nom)}</a></td></tr>`,
+  )
+  .join('\n')}
+</tbody>
+</table>
+<h2>Le thème de chaque ${esc(nom)} ${y}</h2>
+<ul class="list">${list.map((e) => `<li><a href="${h(e.path)}">${esc(ph.nom)} en ${esc(e.signe.nom)} (${esc(monthName(e.date))})</a> : ${esc(LUNE_EN[e.sign][type].theme.toLowerCase())}.</li>`).join('')}</ul>
+<h2>La ${esc(nom)}, c’est quoi ?</h2>
+<p>${esc(ph.intro)}</p>
+<ul class="list">${ph.conseils.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
+<h2>Questions fréquentes</h2>
+${faqHtml(faq)}
+<p style="margin-top:20px">Voir aussi : ${[
+  [hubPath(other, y), `${PHASES[other].nom} ${y}`],
+  ...YEARS.filter((o) => o !== y).map((o) => [hubPath(type, o), `${ph.nom} ${o}`]),
+  ['/calendrier-lunaire/', 'tout le calendrier lunaire'],
+]
+  .map(([to, l]) => `<a href="${h(to)}">${esc(l)}</a>`)
+  .join(' · ')}</p>
+<script>
+(function(){var now=Date.now(),done=false;document.querySelectorAll('tr[data-t]').forEach(function(r){if(+r.dataset.t<now){r.className='past'}else if(!done){done=true;r.className='next';r.cells[0].insertAdjacentHTML('beforeend','<span class="badge">Prochaine</span>')}})})()
+</script>`,
+    })
+  }
+}
 
 pages.push({
   path: '/compatibilite/',
