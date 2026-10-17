@@ -61,3 +61,14 @@ footer.bottom a{color:#71717a;text-decoration:none}
 footer.bottom a:hover{color:#d4d4d8}
 @media (min-width:720px){h1{font-size:44px}.grid{grid-template-columns:repeat(3,1fr)}.facts{grid-template-columns:repeat(4,1fr)}}
 @media (max-width:480px){nav.main{gap:12px;font-size:13px}.brand{font-size:21px}nav.main .long{display:none}}
+.moon-now{display:flex;align-items:center;gap:22px;margin:26px 0 0;padding:20px;border:1px solid #18181b;border-radius:20px;background:radial-gradient(ellipse at left,#7d6be622,transparent 60%),#09090b}
+.moon-now svg{flex:none;filter:drop-shadow(0 0 18px #a855f755)}
+.moon-now p{margin:0}
+.moon-date{font-size:13px;color:#71717a}
+.moon-name{color:#fff;font-size:24px;font-weight:700;line-height:1.25;margin:2px 0 4px!important}
+.calc{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin:26px 0 0;padding:20px;border:1px solid #18181b;border-radius:20px;background:#09090b}
+.calc label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#71717a}
+.calc select{background:#000;color:#fff;border:1px solid #27272a;border-radius:12px;padding:11px 12px;font:16px Inter,system-ui,sans-serif}
+.calc .btn{margin-top:0;border:0;cursor:pointer;font:600 16px Inter,system-ui,sans-serif}
+.calc-result{margin-top:16px;color:#e4e4e7;font-size:17px}
+.calc-result strong{color:#fff}

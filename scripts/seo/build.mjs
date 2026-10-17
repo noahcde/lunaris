@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { lunations } from './moon.mjs'
 import { SIGNES } from '../../src/content/seo/signes.js'
 import { FAQ_LUNE, LUNE_EN, PHASES } from '../../src/content/seo/lunes.js'
+import { DEBUTS_SIGNES, FAQ_LUNE_AUJOURDHUI, FAQ_MON_SIGNE, PHASES_LUNE } from '../../src/content/seo/outils.js'
 import { COMPAT as C1 } from '../../src/content/seo/compat-1.js'
 import { COMPAT as C2 } from '../../src/content/seo/compat-2.js'
 import { COMPAT as C3 } from '../../src/content/seo/compat-3.js'
@@ -132,7 +133,7 @@ ${body(h)}
 </aside>
 </main>
 <footer class="bottom">
-<nav aria-label="Pages">${[...SIGNES.map((s) => [`/signes/${s.slug}/`, s.nom]), ['/compatibilite/', 'Compatibilité'], ['/calendrier-lunaire/', 'Calendrier lunaire']].map(([to, l]) => `<a href="${h(to)}">${esc(l)}</a>`).join('')}</nav>
+<nav aria-label="Pages">${[...SIGNES.map((s) => [`/signes/${s.slug}/`, s.nom]), ['/compatibilite/', 'Compatibilité'], ['/calendrier-lunaire/', 'Calendrier lunaire'], ['/lune-aujourdhui/', 'Lune aujourd’hui'], ['/quel-est-mon-signe/', 'Quel est mon signe ?']].map(([to, l]) => `<a href="${h(to)}">${esc(l)}</a>`).join('')}</nav>
 <nav aria-label="Informations légales">${LEGAL.map(([id, l]) => `<a href="${h(`/#${id}`)}">${l}</a>`).join('')}</nav>
 <p>© ${today.getFullYear()} Lunaris</p>
 </footer>
@@ -169,7 +170,7 @@ pages.push({
 ${SIGNES.map((s) => `<a class="card" href="${h(`/signes/${s.slug}/`)}"><span class="sym" aria-hidden="true">${s.symbole}\uFE0E</span><strong>${esc(s.nom)}</strong><span>${esc(s.dates)}</span><span>${esc(s.element)} · ${esc(s.planete)}</span></a>`).join('\n')}
 </div>
 <h2>Comment connaître son signe ?</h2>
-<p>Repérez votre date de naissance dans les dates ci-dessus. Si vous êtes né à la limite entre deux signes, le signe exact dépend de l’heure et du lieu de naissance : Lunaris fait ce calcul pour vous à partir de votre date de naissance.</p>
+<p>Repérez votre date de naissance dans les dates ci-dessus, ou utilisez le <a href="${h('/quel-est-mon-signe/')}">calcul du signe astrologique</a>. Si vous êtes né à la limite entre deux signes, le signe exact dépend de l’heure et du lieu de naissance : Lunaris fait ce calcul pour vous à partir de votre date de naissance.</p>
 <h2>Les quatre éléments</h2>
 <ul class="list">
 <li><strong>Feu</strong> (Bélier, Lion, Sagittaire) : l’élan, l’enthousiasme, l’action.</li>
@@ -234,6 +235,7 @@ pages.push({
   body: (h) => `
 <h1>Calendrier lunaire ${yearList(YEARS)}</h1>
 <p class="lead">Les dates et heures exactes (heure de Paris) de chaque nouvelle lune et pleine lune, le signe du zodiaque dans lequel elle se forme, et des idées concrètes pour en tirer parti.</p>
+<p>Et ce soir ? Voir la <a href="${h('/lune-aujourdhui/')}">phase de la Lune aujourd’hui</a>.</p>
 ${nextEvent ? `<p>Prochaine lune : <a href="${h(nextEvent.path)}">${esc(nextEvent.label)} en ${esc(nextEvent.signe.nom)}</a>, à ${hourMinute(nextEvent.date)}.</p>` : ''}
 ${YEARS.map(
   (y) => `<h2>Pleines et nouvelles lunes ${y}</h2>
@@ -407,6 +409,116 @@ ${faqHtml(c.faq)}
 <p><a href="${h(`/signes/${A.slug}/`)}">Le signe ${esc(A.nom)}</a>${A.slug === B.slug ? '' : ` · <a href="${h(`/signes/${B.slug}/`)}">Le signe ${esc(B.nom)}</a>`} · <a href="${h(`/compatibilite/#${A.slug}`)}">${esc(A.nom)} avec les autres signes</a></p>`,
   })
 }
+
+
+// ---------- Outils : Lune aujourd'hui, quel est mon signe ----------
+
+// Phase du jour calculée dans le navigateur à partir des dates exactes des lunes (le HTML montre l'état au jour de la génération).
+const LUNES_JS = JSON.stringify(events.map((e) => [e.date.getTime(), e.type === 'pleine' ? 1 : 0, e.path, e.signe.nom, `${weekday(e.date)} ${dayMonthYear(e.date)} à ${hourMinute(e.date)}`]))
+function phaseAt(t) {
+  const prev = events.filter((e) => e.type === 'nouvelle' && e.date.getTime() <= t).at(-1)
+  const next = events.find((e) => e.type === 'nouvelle' && e.date.getTime() > t)
+  const f = (t - prev.date) / (next.date - prev.date)
+  return { f, age: (t - prev.date) / 86400000, lit: Math.round(((1 - Math.cos(2 * Math.PI * f)) / 2) * 100), i: Math.round(f * 8) % 8 }
+}
+function moonPath(f, r = 60) {
+  const rx = Math.abs(Math.cos(2 * Math.PI * f)) * r
+  return f < 0.5
+    ? `M0,${-r}A${r},${r} 0 0 1 0,${r}A${rx},${r} 0 0 ${f < 0.25 ? 0 : 1} 0,${-r}Z`
+    : `M0,${-r}A${r},${r} 0 0 0 0,${r}A${rx},${r} 0 0 ${f < 0.75 ? 0 : 1} 0,${-r}Z`
+}
+const nowPhase = phaseAt(today.getTime())
+const nextOf = (type) => upcoming.find((e) => e.type === type)
+
+pages.push({
+  path: '/lune-aujourdhui/',
+  section: 'lune',
+  title: 'Phase de la Lune aujourd’hui : quelle lune ce soir ? | Lunaris',
+  description: 'La phase de la Lune aujourd’hui et ce soir : croissante ou décroissante, pourcentage éclairé, âge de la Lune, prochaine pleine lune et nouvelle lune (heure de Paris).',
+  crumbs: [['Accueil', '/'], ['Calendrier lunaire', '/calendrier-lunaire/'], ['Lune aujourd’hui', '/lune-aujourdhui/']],
+  jsonLd: [faqLd(FAQ_LUNE_AUJOURDHUI)],
+  body: (h) => `
+<h1>Phase de la Lune aujourd’hui</h1>
+<p class="lead">La Lune du jour en un coup d’œil : sa phase, la part de sa surface éclairée et les dates des prochaines pleine et nouvelle lunes, à l’heure de Paris.</p>
+<div class="moon-now">
+<svg viewBox="-64 -64 128 128" width="128" height="128" role="img" aria-label="Aspect de la Lune aujourd’hui"><circle r="60" fill="#18181b"/><path id="lune-path" d="${moonPath(nowPhase.f)}" fill="#e4e4e7"/></svg>
+<div>
+<p class="moon-date" id="lune-date">${esc(weekday(today))} ${esc(dayMonthYear(today))}</p>
+<p class="moon-name" id="lune-nom">${esc(PHASES_LUNE[nowPhase.i].nom)}</p>
+<p id="lune-info">Éclairée à ${nowPhase.lit} % · ${nowPhase.f < 0.5 ? 'croissante' : 'décroissante'} · âge : ${nowPhase.age.toFixed(1).replace('.', ',')} jours</p>
+</div>
+</div>
+<dl class="facts">
+<div><dt>Prochaine pleine lune</dt><dd id="lune-pleine">${nextOf('pleine') ? `<a href="${h(nextOf('pleine').path)}">${esc(`${weekday(nextOf('pleine').date)} ${dayMonthYear(nextOf('pleine').date)}`)}</a>` : '—'}</dd></div>
+<div><dt>Prochaine nouvelle lune</dt><dd id="lune-nouvelle">${nextOf('nouvelle') ? `<a href="${h(nextOf('nouvelle').path)}">${esc(`${weekday(nextOf('nouvelle').date)} ${dayMonthYear(nextOf('nouvelle').date)}`)}</a>` : '—'}</dd></div>
+</dl>
+<h2 id="lune-titre-phase">${esc(PHASES_LUNE[nowPhase.i].nom)} : ce que dit cette phase</h2>
+<p id="lune-texte">${esc(PHASES_LUNE[nowPhase.i].texte)}</p>
+<h2>Les 8 phases de la Lune</h2>
+${PHASES_LUNE.map((ph, i) => `<h3><svg viewBox="-64 -64 128 128" width="18" height="18" aria-hidden="true" style="vertical-align:-3px;margin-right:8px"><circle r="60" fill="#27272a"/><path d="${moonPath(i / 8 + (i === 0 ? 0.001 : 0))}" fill="#e4e4e7"/></svg>${esc(ph.nom)}</h3>\n<p>${esc(ph.texte)}</p>`).join('\n')}
+<h2>Questions fréquentes</h2>
+${faqHtml(FAQ_LUNE_AUJOURDHUI)}
+<p style="margin-top:20px"><a href="${h('/calendrier-lunaire/')}">Voir toutes les dates dans le calendrier lunaire</a></p>
+<script>
+(function(){
+var L=${LUNES_JS},P=${JSON.stringify(PHASES_LUNE)},now=Date.now(),prev=null,next=null,nf=null,nn=null;
+L.forEach(function(e){if(e[1]===0){if(e[0]<=now)prev=e;else if(!next)next=e}if(e[0]>now){if(e[1]===1&&!nf)nf=e;if(e[1]===0&&!nn)nn=e}});
+if(!prev||!next)return;
+var f=(now-prev[0])/(next[0]-prev[0]),i=Math.round(f*8)%8,r=60,rx=Math.abs(Math.cos(2*Math.PI*f))*r;
+var d=f<0.5?'M0,-60A60,60 0 0 1 0,60A'+rx+',60 0 0 '+(f<0.25?0:1)+' 0,-60Z':'M0,-60A60,60 0 0 0 0,60A'+rx+',60 0 0 '+(f<0.75?0:1)+' 0,-60Z';
+var $=function(id){return document.getElementById(id)};
+$('lune-path').setAttribute('d',d);
+$('lune-date').textContent=new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Paris'}).format(new Date(now)).replace(/^./,c=>c.toUpperCase());
+$('lune-nom').textContent=P[i].nom;$('lune-titre-phase').textContent=P[i].nom+' : ce que dit cette phase';$('lune-texte').textContent=P[i].texte;
+$('lune-info').textContent='Éclairée à '+Math.round((1-Math.cos(2*Math.PI*f))/2*100)+' % · '+(f<0.5?'croissante':'décroissante')+' · âge : '+((now-prev[0])/864e5).toFixed(1).replace('.',',')+' jours';
+function link(e,id){if(!e)return;var a=document.createElement('a');a.href=e[2];a.textContent=e[4].replace(/ à .*/,'');var dd=$(id);dd.textContent='';dd.appendChild(a)}
+link(nf,'lune-pleine');link(nn,'lune-nouvelle');
+})()
+</script>`,
+})
+
+// Signe du jour/mois donné : le dernier signe dont la date de début est passée dans l'année.
+const ZODIAC_JS = JSON.stringify(SIGNES.map((s) => ({ slug: s.slug, nom: s.nom, dates: s.dates, debut: DEBUTS_SIGNES[s.slug] })))
+const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
+pages.push({
+  path: '/quel-est-mon-signe/',
+  section: 'signes',
+  title: 'Quel est mon signe astrologique ? Calcul avec ma date de naissance | Lunaris',
+  description: 'Trouvez votre signe astrologique en entrant votre jour et votre mois de naissance. Les dates des 12 signes du zodiaque, le cas des naissances entre deux signes et la différence avec l’ascendant.',
+  crumbs: [['Accueil', '/'], ['Signes du zodiaque', '/signes/'], ['Quel est mon signe ?', '/quel-est-mon-signe/']],
+  jsonLd: [faqLd(FAQ_MON_SIGNE)],
+  body: (h) => `
+<h1>Quel est mon signe astrologique ?</h1>
+<p class="lead">Entrez votre jour et votre mois de naissance pour connaître votre signe du zodiaque, puis découvrez sa personnalité, ses forces et ses compatibilités.</p>
+<form class="calc" id="signe-form">
+<label>Jour<select id="signe-jour">${Array.from({ length: 31 }, (_, i) => `<option>${i + 1}</option>`).join('')}</select></label>
+<label>Mois<select id="signe-mois">${MOIS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('')}</select></label>
+<button class="btn" type="submit">Trouver mon signe</button>
+</form>
+<p class="calc-result" id="signe-resultat" aria-live="polite"></p>
+<h2>Les dates des 12 signes</h2>
+<div class="grid">
+${SIGNES.map((s) => `<a class="card" href="${h(`/signes/${s.slug}/`)}"><span class="sym" aria-hidden="true">${s.symbole}︎</span><strong>${esc(s.nom)}</strong><span>${esc(s.dates)}</span></a>`).join('\n')}
+</div>
+<h2>Questions fréquentes</h2>
+${faqHtml(FAQ_MON_SIGNE)}
+<script>
+(function(){
+var Z=${ZODIAC_JS},base=${JSON.stringify(h('/signes/'))};
+document.getElementById('signe-form').addEventListener('submit',function(ev){
+ev.preventDefault();
+var j=+document.getElementById('signe-jour').value,m=+document.getElementById('signe-mois').value,k=m*100+j,best=null;
+Z.forEach(function(s){var d=s.debut[0]*100+s.debut[1];if(d<=k&&(!best||d>best.d))best={s:s,d:d}});
+if(!best)Z.forEach(function(s){var d=s.debut[0]*100+s.debut[1];if(!best||d>best.d)best={s:s,d:d}});
+var s=best.s,out=document.getElementById('signe-resultat'),a=document.createElement('a');
+a.href=base.replace(/index\.html$/,'')+s.slug+'/'+(base.slice(-10)==='index.html'?'index.html':'');a.textContent='Découvrir le signe '+s.nom+' →';
+var cusp=(s.debut[0]===m&&s.debut[1]===j)||Z.some(function(o){var dd=new Date(2001,o.debut[0]-1,o.debut[1]-1);return dd.getMonth()+1===m&&dd.getDate()===j});
+out.textContent='';var b=document.createElement('strong');b.textContent='Votre signe : '+s.nom;out.appendChild(b);
+out.appendChild(document.createTextNode(' ('+s.dates+'). '+(cusp?'Vous êtes né à la limite entre deux signes : selon votre année et votre heure de naissance, le signe voisin est possible. ':'')));out.appendChild(a);
+});
+})()
+</script>`,
+})
 
 // ---------- Écriture ----------
 
