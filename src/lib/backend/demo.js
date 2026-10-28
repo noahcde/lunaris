@@ -5,6 +5,7 @@ import { dayKey } from '../streak'
 
 const SESSION_KEY = 'aligned.demo.session'
 const DATA_KEY = 'aligned.demo.user'
+const PREVIEW_KEY = 'aligned.demo.preview'
 
 const DEMO_USER = {
   uid: 'demo',
@@ -120,13 +121,22 @@ const SAMPLES = [
 
 export async function getDaily(date) {
   await new Promise((r) => setTimeout(r, 900))
-  if (!billingState().active) return { date, locked: true }
   const sign = sunSign(memory.data?.birthDate) ?? 'votre signe'
   const sample = SAMPLES[Number(date.slice(-2)) % SAMPLES.length]
-  return {
+  const daily = {
     date,
     insight: { ...sample.insight, text: sample.insight.text.replace('Votre signe', `Le ${sign}`) },
     tasks: sample.tasks,
+  }
+  if (billingState().active) return daily
+  // Comme le serveur : un seul jour d'aperçu sans abonnement (message du jour + 1 tâche).
+  const previewDate = read(PREVIEW_KEY)
+  if (previewDate && previewDate !== date) return { date, locked: true }
+  write(PREVIEW_KEY, date)
+  return {
+    date,
+    locked: true,
+    preview: { insight: { title: daily.insight.title, text: daily.insight.text }, tasks: daily.tasks.slice(0, 1) },
   }
 }
 

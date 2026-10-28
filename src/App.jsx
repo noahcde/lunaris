@@ -96,13 +96,15 @@ export default function App() {
   }, [])
 
   // Horoscope et tâches du jour : générés une fois par jour côté serveur, puis relus depuis le cache.
-  // Sans abonnement, le serveur ne renvoie rien et l'app affiche des textes floutés.
+  // Sans abonnement, le serveur envoie un aperçu le premier jour (message + 1 tâche), puis plus rien :
+  // l'app affiche alors des textes floutés.
   const profileReady = Boolean(user && data?.birthDate)
   const loadDaily = useCallback(async () => {
     setDaily({ status: 'loading' })
     try {
       const result = await backend.getDaily(todayKey)
-      setDaily(result.locked ? { status: 'locked' } : { status: 'ready', ...result })
+      if (result.preview) setDaily({ status: 'preview', ...result.preview })
+      else setDaily(result.locked ? { status: 'locked' } : { status: 'ready', ...result })
     } catch {
       setDaily({ status: 'error' })
     }

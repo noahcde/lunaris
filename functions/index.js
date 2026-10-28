@@ -138,47 +138,67 @@ export const getDaily = onCall(
 
     const { db, FieldValue, generateDaily, billing } = await loadDeps()
 
-    // Sans abonnement, aucun contenu n'est envoyé : l'app affiche un texte flouté à la place.
+    // Sans abonnement : un seul jour d'aperçu (message du jour + 1 tâche), le premier jour où la personne ouvre l'app.
+    // Ensuite, aucun contenu n'est envoyé et l'app affiche un texte flouté à la place.
     const state = hasFreeAccess(request)
       ? FREE_ACCESS
       : await stripeCall('Lecture de l’abonnement impossible', uid, () => billing.getBillingState(uid))
-    if (!state.active) return { date, locked: true }
-
-    const cacheRef = db.doc(`users/${uid}/daily/${date}`)
-    const cached = await cacheRef.get()
-    if (cached.exists) return cached.data()
-
-    const user = (await db.doc(`users/${uid}`).get()).data()
-    if (!user?.birthDate) throw new HttpsError('failed-precondition', 'Profil incomplet.')
-
-    // Tâches des 7 jours précédents : l'IA doit en proposer d'autres.
-    const previousDays = [1, 2, 3, 4, 5, 6, 7].map((k) =>
-      new Date(Date.parse(`${date}T12:00:00Z`) - k * 86400000).toISOString().slice(0, 10),
-    )
-    const previous = await db.getAll(...previousDays.map((d) => db.doc(`users/${uid}/daily/${d}`)))
-    const recentTasks = previous.flatMap((d) => (d.exists ? (d.data().tasks ?? []).map((t) => t.title) : []))
-
-    try {
-      const daily = await generateDaily({
-        uid,
+    if (!state.active) {
+      // previews/{uid} n'est accessible qu'au serveur : l'app ne peut pas remettre l'aperçu à zéro.
+      const previewRef = db.doc(`previews/${uid}`)
+      const previewDate = (await previewRef.get()).data()?.date
+      if (previewDate && previewDate !== date) return { date, locked: true }
+      const daily = await dailyFor({ db, FieldValue, generateDaily, uid, date })
+      if (!previewDate) await previewRef.set({ date, at: FieldValue.serverTimestamp() })
+      return {
         date,
-        recentTasks,
-        model: OPENAI_MODEL.value(),
-        firstName: user.firstName,
-        sign: sunSign(user.birthDate),
-        birthTime: user.birthTimeUnknown ? null : user.birthTime,
-        quiz: user.quiz,
-        ...dayContext(date),
-      })
-      const result = { ...daily, date, generatedAt: FieldValue.serverTimestamp() }
-      await cacheRef.set(result)
-      return { ...daily, date }
-    } catch (err) {
-      logger.error('Génération du jour impossible', { uid, date, error: String(err) })
-      throw new HttpsError('unavailable', 'La génération a échoué. Réessayez dans un instant.')
+        locked: true,
+        preview: { insight: { title: daily.insight.title, text: daily.insight.text }, tasks: daily.tasks.slice(0, 1) },
+      }
     }
+
+    return dailyFor({ db, FieldValue, generateDaily, uid, date })
   },
 )
+
+// Horoscope et tâches du jour, générés une fois puis relus depuis users/{uid}/daily/{date}.
+async function dailyFor({ db, FieldValue, generateDaily, uid, date }) {
+  const cacheRef = db.doc(`users/${uid}/daily/${date}`)
+  const cached = await cacheRef.get()
+  if (cached.exists) {
+    const { generatedAt, ...daily } = cached.data()
+    return daily
+  }
+
+  const user = (await db.doc(`users/${uid}`).get()).data()
+  if (!user?.birthDate) throw new HttpsError('failed-precondition', 'Profil incomplet.')
+
+  // Tâches des 7 jours précédents : l'IA doit en proposer d'autres.
+  const previousDays = [1, 2, 3, 4, 5, 6, 7].map((k) =>
+    new Date(Date.parse(`${date}T12:00:00Z`) - k * 86400000).toISOString().slice(0, 10),
+  )
+  const previous = await db.getAll(...previousDays.map((d) => db.doc(`users/${uid}/daily/${d}`)))
+  const recentTasks = previous.flatMap((d) => (d.exists ? (d.data().tasks ?? []).map((t) => t.title) : []))
+
+  try {
+    const daily = await generateDaily({
+      uid,
+      date,
+      recentTasks,
+      model: OPENAI_MODEL.value(),
+      firstName: user.firstName,
+      sign: sunSign(user.birthDate),
+      birthTime: user.birthTimeUnknown ? null : user.birthTime,
+      quiz: user.quiz,
+      ...dayContext(date),
+    })
+    await cacheRef.set({ ...daily, date, generatedAt: FieldValue.serverTimestamp() })
+    return { ...daily, date }
+  } catch (err) {
+    logger.error('Génération du jour impossible', { uid, date, error: String(err) })
+    throw new HttpsError('unavailable', 'La génération a échoué. Réessayez dans un instant.')
+  }
+}
 
 export const morningNotifications = onSchedule(
   { schedule: '* * * * *', timeZone: 'Europe/Paris', region: 'europe-west1', timeoutSeconds: 120 },

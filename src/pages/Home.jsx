@@ -75,7 +75,7 @@ function Skeleton({ className }) {
   return <span className={cx('block animate-pulse rounded-md bg-zinc-900', className)} />
 }
 
-// Textes d'attente affichés floutés : le vrai contenu n'est jamais envoyé sans abonnement.
+// Textes d'attente affichés floutés : sans abonnement, le vrai contenu n'est envoyé que le jour d'aperçu (message + 1 tâche).
 const LOCKED_INSIGHT = {
   title: 'Une journée propice aux décisions claires.',
   text: 'Le ciel du jour éclaire vos priorités et met en lumière une énergie à canaliser. Votre signe trouve un appui inattendu dans les échanges de l’après-midi.',
@@ -144,6 +144,22 @@ function CosmicInsight({ daily, sign, onRetry, trialAvailable, onUnlock }) {
           <h2 className="mt-3 text-[17px] font-semibold leading-snug text-white">{daily.insight.title}</h2>
           <p className="mt-2 text-sm leading-relaxed text-zinc-400">{daily.insight.text}</p>
           <InsightSections sections={daily.insight.sections} />
+        </>
+      )}
+
+      {daily.status === 'preview' && (
+        <>
+          <h2 className="mt-3 text-[17px] font-semibold leading-snug text-white">{daily.insight.title}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-400">{daily.insight.text}</p>
+          <div className="relative">
+            <div aria-hidden="true" className={LOCKED_TEXT}>
+              <InsightSections sections={LOCKED_INSIGHT.sections} />
+            </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
+              <p className="text-sm font-medium text-white">Amour, travail, énergie : la suite de votre journée.</p>
+              <UnlockButton trialAvailable={trialAvailable} onClick={onUnlock} />
+            </div>
+          </div>
         </>
       )}
 
@@ -262,7 +278,7 @@ function LockedTask({ task }) {
   )
 }
 
-function AlignmentTasks({ tasks, onToggle, loading, locked }) {
+function AlignmentTasks({ tasks, onToggle, loading, locked, preview }) {
   const total = 3
   const doneCount = tasks.filter((t) => t.done).length
   const progress = Math.round((doneCount / total) * 100)
@@ -294,7 +310,12 @@ function AlignmentTasks({ tasks, onToggle, loading, locked }) {
       </div>
 
       <ul className="mt-4 flex flex-col gap-2.5">
-        {locked
+        {preview
+          ? [
+              ...tasks.map((task) => <TaskItem key={task.id} task={task} onToggle={onToggle} />),
+              ...LOCKED_TASKS.slice(tasks.length).map((task) => <LockedTask key={task.title} task={task} />),
+            ]
+          : locked
           ? LOCKED_TASKS.map((task) => <LockedTask key={task.title} task={task} />)
           : loading
           ? [0, 1, 2].map((i) => (
@@ -412,7 +433,13 @@ export default function Home({ today, user, profile, onOpenProfile, daily, onRet
             trialAvailable={trialAvailable}
             onUnlock={onUnlock}
           />
-          <AlignmentTasks tasks={tasks} onToggle={onToggleTask} loading={daily.status !== 'ready'} locked={locked} />
+          <AlignmentTasks
+            tasks={tasks}
+            onToggle={onToggleTask}
+            loading={daily.status !== 'ready'}
+            locked={locked}
+            preview={daily.status === 'preview'}
+          />
         </div>
         <div className="flex flex-col gap-7">
           <StreakCard
