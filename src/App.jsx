@@ -20,10 +20,13 @@ import { isStandalone } from './lib/pwa'
 import { nextSendAt } from './lib/schedule'
 import LegalPage from './pages/LegalPage'
 import { DOC_IDS } from './content/legal'
+import { autoOpenBrowser } from './lib/inapp'
 import { captureReferral, clearReferral, pendingReferral, shareInvite } from './lib/referral'
 
 // Lien d'invitation (?parrain=CODE) : gardé dès l'ouverture, utilisé après l'inscription.
 captureReferral()
+// Lien ouvert dans Snapchat, Instagram… sur Android : on passe directement dans Chrome (Google y bloque la connexion).
+autoOpenBrowser()
 
 const PAGES = ['accueil', 'calendrier']
 

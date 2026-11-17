@@ -4,6 +4,7 @@ import ZodiacWheel from '../components/ZodiacWheel'
 import { EXAMPLE_REVIEWS, REVIEWS } from '../content/reviews'
 import { cx } from '../lib/astro'
 import Logo from '../components/Logo'
+import { inAppBrowser, isAndroid, safariLink } from '../lib/inapp'
 
 const STEPS = [
   { Icon: MessageCircleQuestion, title: 'Vous répondez à 5 questions', text: 'Ce qui vous occupe, la période que vous traversez, votre date de naissance.' },
@@ -151,8 +152,19 @@ function DesktopStart({ onStart, className }) {
 }
 
 export default function Landing({ onStart, onSignIn, demo, invited }) {
+  // iPhone, lien ouvert dans Snapchat, Instagram… : on propose Safari dès l'arrivée, avant le questionnaire
+  // (sur Android, l'app bascule déjà toute seule dans Chrome).
+  const leaveApp = !demo && inAppBrowser() && !isAndroid()
   return (
     <div className="pb-36 lg:pb-24">
+      {leaveApp && (
+        <a
+          href={safariLink()}
+          className="mt-4 block rounded-xl border border-blue-600/40 bg-blue-600/[0.08] px-4 py-3 text-center text-sm text-white"
+        >
+          Pour pouvoir vous connecter, <strong className="underline underline-offset-2">ouvrez Lunaris dans Safari</strong>
+        </a>
+      )}
       {invited && (
         <p className="mt-4 rounded-xl border border-purple-500/30 bg-purple-500/[0.08] px-4 py-3 text-center text-sm text-white">
           🎁 Un ami vous offre <strong>7 jours de Lunaris Premium</strong>, sans carte bancaire.
