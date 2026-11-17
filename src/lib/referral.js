@@ -3,18 +3,14 @@
 const KEY = 'lunaris.parrain'
 const CODE_RE = /^[A-HJ-NP-Z2-9]{6}$/
 
-// À l'ouverture : lit ?parrain=… dans l'adresse, le garde, et le retire de l'adresse affichée.
+// À l'ouverture : lit ?parrain=… dans l'adresse et le garde. Le code reste dans l'adresse jusqu'à son utilisation :
+// si la personne copie l'adresse (par exemple pour quitter le navigateur de Snapchat), l'invitation suit.
 export function captureReferral() {
   try {
-    const params = new URLSearchParams(window.location.search)
-    const code = params.get('parrain')?.toUpperCase()
-    if (!code) return
-    if (CODE_RE.test(code)) localStorage.setItem(KEY, code)
-    params.delete('parrain')
-    const query = params.toString()
-    window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`)
+    const code = new URLSearchParams(window.location.search).get('parrain')?.toUpperCase()
+    if (code && CODE_RE.test(code)) localStorage.setItem(KEY, code)
   } catch {
-    // Stockage ou historique indisponible : le lien n'est simplement pas pris en compte.
+    // Stockage indisponible : le lien n'est simplement pas pris en compte.
   }
 }
 
@@ -30,6 +26,12 @@ export function pendingReferral() {
 export function clearReferral() {
   try {
     localStorage.removeItem(KEY)
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('parrain')) {
+      params.delete('parrain')
+      const query = params.toString()
+      window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`)
+    }
   } catch {
     // rien à faire
   }

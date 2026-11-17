@@ -43,7 +43,7 @@ const actionClass = cx(
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600',
 )
 
-export default function ProfileSheet({ open, user, profile, streak, billing, demo, onClose, onEdit, onSubscribe, onManageBilling, onSignOut, onResetDemo, notificationSettings, onInstall, onInvite }) {
+export default function ProfileSheet({ open, user, profile, streak, billing, demo, onClose, onEdit, onSubscribe, onManageBilling, onSignOut, onResetDemo, notificationSettings, onInstall, onInvite, inviteCode }) {
   useEffect(() => {
     if (!open) return
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -100,6 +100,7 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
           <Row label="Situation" value={answerLabel(profile, 'situation') ?? 'Non renseignée'} />
           <Row label="Série en cours" value={`${streak.current} ${streak.current > 1 ? 'jours' : 'jour'} · record ${streak.best}`} />
           <Row label="Abonnement" value={billingLabel(billing)} />
+          {inviteCode && <Row label="Mon code d’invitation" value={<span className="font-semibold tracking-[0.2em]">{inviteCode}</span>} />}
         </div>
 
         {notificationSettings && <div className="mt-5">{notificationSettings}</div>}

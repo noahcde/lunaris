@@ -74,7 +74,73 @@ function PlanOption({ id, plan, selected, onSelect }) {
   )
 }
 
-export default function Paywall({ open, trialAvailable, onClose, onSubscribe }) {
+const CLAIM_ERRORS = {
+  'code-invalide': 'Ce code n’existe pas. Vérifiez les 6 caractères.',
+  'code-inconnu': 'Ce code n’existe pas. Vérifiez les 6 caractères.',
+  'soi-meme': 'C’est votre propre code : envoyez-le plutôt à un ami.',
+  'deja-abonne': 'Les 7 jours offerts sont réservés aux personnes qui n’ont jamais été abonnées.',
+  'compte-ancien': 'Les 7 jours offerts sont réservés aux comptes créés il y a moins de 7 jours.',
+  'deja-parraine': 'Vous avez déjà utilisé un code d’invitation.',
+}
+
+// Code d'invitation tapé à la main : utile quand le lien s'est perdu en route (copié sans le code, autre navigateur…).
+function InviteCodeField({ onClaim }) {
+  const [opened, setOpened] = useState(false)
+  const [code, setCode] = useState('')
+  const [state, setState] = useState('idle') // idle | loading | error
+  const [error, setError] = useState(null)
+  if (!opened)
+    return (
+      <button
+        type="button"
+        onClick={() => setOpened(true)}
+        className="mt-4 w-full text-center text-xs font-medium text-zinc-400 underline underline-offset-2 transition-all duration-300 ease-in-out hover:text-white"
+      >
+        Un ami vous a invité ? Entrez son code
+      </button>
+    )
+  const submit = async (e) => {
+    e.preventDefault()
+    setState('loading')
+    setError(null)
+    try {
+      const res = await onClaim(code.trim().toUpperCase())
+      if (res?.ok) return
+      setError(CLAIM_ERRORS[res?.reason] ?? 'Ce code n’a pas pu être utilisé.')
+    } catch {
+      setError('Vérification impossible. Réessayez dans un instant.')
+    }
+    setState('idle')
+  }
+  return (
+    <form onSubmit={submit} className="mt-4 rounded-xl border border-zinc-900 bg-black p-3">
+      <label htmlFor="invite-code" className="block text-xs text-zinc-400">
+        Code d’invitation de votre ami (6 caractères, visible dans son profil ou à la fin de son lien)
+      </label>
+      <div className="mt-2 flex gap-2">
+        <input
+          id="invite-code"
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase())}
+          autoCapitalize="characters"
+          autoComplete="off"
+          placeholder="ABCD23"
+          className="min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-[15px] uppercase tracking-[0.2em] text-white placeholder:text-zinc-700 focus:border-blue-600 focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={code.length !== 6 || state === 'loading'}
+          className="rounded-lg bg-white px-4 text-sm font-semibold text-zinc-900 transition-all duration-300 ease-in-out hover:bg-zinc-200 disabled:opacity-40"
+        >
+          {state === 'loading' ? '…' : 'Valider'}
+        </button>
+      </div>
+      {error && <p role="alert" className="mt-2 text-xs text-red-400">{error}</p>}
+    </form>
+  )
+}
+
+export default function Paywall({ open, trialAvailable, onClose, onSubscribe, onClaimCode }) {
   const [plan, setPlan] = useState('yearly')
   const [state, setState] = useState('idle') // idle | loading | error
   const [accepted, setAccepted] = useState(false) // CGV + accès immédiat (renonciation à la rétractation)
@@ -197,6 +263,8 @@ export default function Paywall({ open, trialAvailable, onClose, onSubscribe }) 
           <br />
           Paiement sécurisé par Stripe.
         </p>
+
+        {trialAvailable && onClaimCode && open && <InviteCodeField onClaim={onClaimCode} />}
       </div>
     </div>
   )

@@ -181,6 +181,18 @@ export default function App() {
     }
   }, [profileReady, user?.uid, backend, refreshAccess])
 
+  // Code d'invitation tapé dans la fenêtre d'abonnement (lien perdu en route).
+  const claimCode = async (code) => {
+    const res = await backend.claimReferral(code)
+    if (res?.ok) {
+      clearReferral()
+      setPaywallOpen(false)
+      setGift(res.days)
+      refreshAccess(true)
+    }
+    return res
+  }
+
   const invite = async () => {
     if (!referral?.code) return
     const result = await shareInvite(referral.code)
@@ -506,6 +518,7 @@ export default function App() {
         }}
         onSubscribe={openPaywall}
         onManageBilling={manageBilling}
+        inviteCode={referral?.code}
         onInvite={
           referral
             ? () => {
@@ -543,6 +556,7 @@ export default function App() {
         trialAvailable={trialAvailable}
         onClose={() => setPaywallOpen(false)}
         onSubscribe={subscribe}
+        onClaimCode={backend?.claimReferral ? claimCode : null}
       />
     </div>
   )

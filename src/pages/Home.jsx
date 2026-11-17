@@ -473,6 +473,11 @@ export function InviteCard({ referral, onInvite, className }) {
           <p className="mt-1 text-xs leading-relaxed text-zinc-400">
             Envoyez votre lien : quand votre ami s’inscrit, vous recevez tous les deux 7 jours de Premium.
           </p>
+          {referral?.code && (
+            <p className="mt-2 text-xs text-zinc-400">
+              Votre code : <span className="font-semibold tracking-[0.2em] text-white">{referral.code}</span>
+            </p>
+          )}
           {referral?.invited > 0 && (
             <p className="mt-1 text-xs text-zinc-500">
               {referral.invited} {referral.invited > 1 ? 'amis inscrits' : 'ami inscrit'} grâce à vous
