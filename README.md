@@ -62,7 +62,8 @@ Sans abonnement, le serveur ne renvoie aucun contenu et l'app affiche des textes
 
 - `functions/phrase.js` : chaque jour, une « phrase du jour » par signe (12 phrases en un seul appel à l'IA pour tous les utilisateurs),
   gardée dans `phrases/{date}`. Elle sert de texte à la notification du matin (« Lion · … ») et reste visible dans l'app sans abonnement,
-  après le jour d'aperçu ; le reste de l'horoscope est flouté.
+  après le jour d'aperçu. Le même appel écrit un horoscope général par signe (quelques lignes), gratuit dans l'app mais absent
+  de la notification ; l'horoscope personnel et les tâches restent floutés.
 - `functions/referral.js` : lien d'invitation `https://lunaris-app.fr/?parrain=CODE` (bouton sur l'accueil et dans le profil).
   Un nouveau compte (créé depuis moins de 7 jours, sans abonnement passé) qui arrive par ce lien reçoit 7 jours de Premium sans carte
   (`grants/{uid}`), et le parrain aussi : jours offerts, ou prochain prélèvement Stripe repoussé de 7 jours s'il est abonné

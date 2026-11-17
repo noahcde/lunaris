@@ -168,9 +168,16 @@ function CosmicInsight({ daily, sign, onRetry, trialAvailable, onUnlock }) {
         <>
           <p className="mt-3 text-[11px] font-medium text-zinc-500">Votre phrase du jour</p>
           <h2 className="mt-1 text-[17px] font-semibold leading-snug text-white">{daily.phrase.text}</h2>
+          {daily.phrase.general && (
+            <>
+              <p className="mt-5 text-[11px] font-medium text-zinc-500">Horoscope du jour · {daily.phrase.sign}</p>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-300">{daily.phrase.general}</p>
+            </>
+          )}
+          <p className="mt-5 text-[11px] font-medium text-zinc-500">Votre horoscope personnel</p>
           <div className="relative">
             <div aria-hidden="true" className={LOCKED_TEXT}>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">{LOCKED_INSIGHT.text}</p>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-400">{LOCKED_INSIGHT.text}</p>
               <InsightSections sections={LOCKED_INSIGHT.sections} />
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">

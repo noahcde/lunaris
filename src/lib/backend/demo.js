@@ -126,6 +126,10 @@ const DEMO_PHRASES = [
   'Vous retenez tout, même ce que les autres ont oublié. C’est une forme de tendresse.',
 ]
 
+const DEMO_GENERAL =
+  'Une journée plus douce qu’elle n’en a l’air. Ce qui coinçait hier se dénoue sans forcer, surtout si vous laissez un peu de place à l’imprévu. ' +
+  'Côté cœur, les mots simples passent mieux que les grandes déclarations. Gardez un moment pour vous ce soir : vous l’aurez mérité.'
+
 export async function getDaily(date) {
   await new Promise((r) => setTimeout(r, 900))
   const sign = sunSign(memory.data?.birthDate) ?? 'votre signe'
@@ -138,7 +142,7 @@ export async function getDaily(date) {
   if (billingState().active) return daily
   // Comme le serveur : un seul jour d'aperçu sans abonnement (message du jour + 1 tâche).
   const previewDate = read(PREVIEW_KEY)
-  if (previewDate && previewDate !== date) return { date, locked: true, phrase: { sign, text: DEMO_PHRASES[Number(date.slice(-2)) % DEMO_PHRASES.length] } }
+  if (previewDate && previewDate !== date) return { date, locked: true, phrase: { sign, text: DEMO_PHRASES[Number(date.slice(-2)) % DEMO_PHRASES.length], general: DEMO_GENERAL } }
   write(PREVIEW_KEY, date)
   return {
     date,

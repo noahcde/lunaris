@@ -95,11 +95,14 @@ async function accessState(request, uid, { refresh = false } = {}) {
   return state
 }
 
-// Phrase du jour d'un signe (même texte pour tout le signe, voir phrase.js).
-async function phraseOf(date, sign) {
+// Textes du jour d'un signe (mêmes pour tout le signe, voir phrase.js).
+async function textsOf(date) {
   const { phrase } = await loadDeps()
-  const signs = await phrase.phrasesOfDay({ model: OPENAI_MODEL.value(), date })
-  return signs[sign] ?? null
+  return phrase.phrasesOfDay({ model: OPENAI_MODEL.value(), date })
+}
+// Seule la phrase va dans la notification ; l'horoscope général reste dans l'app.
+async function phraseOf(date, sign) {
+  return (await textsOf(date)).signs[sign] ?? null
 }
 
 const stripeCall = async (label, uid, fn) => {
@@ -177,14 +180,15 @@ export const getDaily = onCall(
   },
 )
 
-// Phrase du jour gratuite { sign, text }, ou null si le profil ou la génération manque (l'app floute alors tout).
+// Partie gratuite { sign, text, general } (phrase + horoscope général du signe), ou null si le profil ou la génération manque (l'app floute alors tout).
 async function freePhrase(db, uid, date) {
   try {
     const birthDate = (await db.doc(`users/${uid}`).get()).data()?.birthDate
     if (!birthDate) return null
     const sign = sunSign(birthDate)
-    const text = await phraseOf(date, sign)
-    return text ? { sign, text } : null
+    const { signs, general } = await textsOf(date)
+    const text = signs[sign]
+    return text ? { sign, text, general: general[sign] ?? null } : null
   } catch (err) {
     logger.warn('Phrase du jour indisponible', { uid, date, error: String(err) })
     return null
