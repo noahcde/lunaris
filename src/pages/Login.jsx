@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ArrowLeft, Flame, Loader2, Moon, Sparkles } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Flame, Loader2, Moon, Sparkles } from "lucide-react";
+import { chromeIntentLink, inAppBrowser, isAndroid, siteLink } from "../lib/inapp";
 import GoogleIcon from "../components/GoogleIcon";
 import { cx } from "../lib/astro";
 import Logo from "../components/Logo";
@@ -23,9 +24,53 @@ const FEATURES = [
   },
 ];
 
+// Ouvert depuis Instagram, Snapchat, TikTok… : Google bloque la connexion, on explique comment ouvrir le vrai navigateur.
+function OpenInBrowser() {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(siteLink());
+      setCopied(true);
+    } catch {
+      window.prompt("Copiez ce lien :", siteLink());
+    }
+  };
+  const button = cx(
+    "flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[15px] font-semibold transition-all duration-300 ease-in-out",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600",
+  );
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+      <p className="text-[15px] font-semibold text-white">Ouvrez Lunaris dans votre navigateur</p>
+      <p className="mt-2 text-sm leading-relaxed text-zinc-400">
+        Google ne permet pas de se connecter depuis le navigateur de cette appli.
+        {isAndroid()
+          ? " Touchez le bouton ci-dessous pour continuer dans Chrome."
+          : " Touchez ••• ou l’icône de partage en haut de l’écran, puis «\u00a0Ouvrir dans Safari\u00a0»."}
+      </p>
+      <div className="mt-4 flex flex-col gap-2">
+        {isAndroid() && (
+          <a href={chromeIntentLink()} className={cx(button, "bg-blue-600 text-white hover:bg-blue-500")}>
+            <ExternalLink className="h-4 w-4" />
+            Ouvrir dans Chrome
+          </a>
+        )}
+        <button type="button" onClick={copy} className={cx(button, "border border-zinc-800 bg-black text-white hover:border-zinc-700")}>
+          <Copy className="h-4 w-4" />
+          {copied ? "Lien copié : collez-le dans Safari ou Chrome" : "Copier le lien"}
+        </button>
+      </div>
+      {siteLink().includes("parrain=") && (
+        <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">Votre invitation reste valable avec ce lien.</p>
+      )}
+    </div>
+  );
+}
+
 export default function Login({ onSignIn, demo, fromQuiz = false, onBack }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
+  const blocked = !demo && inAppBrowser();
 
   const handleClick = async () => {
     setPending(true);
@@ -103,6 +148,9 @@ export default function Login({ onSignIn, demo, fromQuiz = false, onBack }) {
         <p className="mb-5 hidden text-center text-lg font-semibold text-white lg:block">
           {fromQuiz ? "Plus qu’une étape" : "Connectez-vous"}
         </p>
+        {blocked ? (
+          <OpenInBrowser />
+        ) : (
         <button
           type="button"
           onClick={handleClick}
@@ -121,6 +169,7 @@ export default function Login({ onSignIn, demo, fromQuiz = false, onBack }) {
           )}
           Continuer avec Google
         </button>
+        )}
 
         {error && (
           <p role="alert" className="mt-3 text-center text-xs text-red-400">
