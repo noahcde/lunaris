@@ -115,7 +115,7 @@ function InviteCodeField({ onClaim }) {
   return (
     <form onSubmit={submit} className="mt-4 rounded-xl border border-zinc-900 bg-black p-3">
       <label htmlFor="invite-code" className="block text-xs text-zinc-400">
-        Code d’invitation (6 caractères, dans le lien de votre ami après « parrain= »)
+        Code d’invitation de votre ami (6 caractères, visible dans son profil ou à la fin de son lien)
       </label>
       <div className="mt-2 flex gap-2">
         <input

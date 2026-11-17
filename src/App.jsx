@@ -518,6 +518,7 @@ export default function App() {
         }}
         onSubscribe={openPaywall}
         onManageBilling={manageBilling}
+        inviteCode={referral?.code}
         onInvite={
           referral
             ? () => {
