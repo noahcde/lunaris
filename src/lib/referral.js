@@ -41,17 +41,20 @@ export const inviteLink = (code) => `https://lunaris-app.fr/?parrain=${code}`
 // Renvoie 'shared', 'copied' ou null (annulé ou impossible).
 export async function shareInvite(code) {
   const url = inviteLink(code)
-  const text = 'Je t’offre 7 jours de Lunaris Premium : ton horoscope et 3 tâches concrètes chaque matin, selon ton signe.'
+  const text =
+    'Je t’offre 7 jours de Lunaris Premium 🎁 Chaque matin, ton horoscope perso et 3 petites choses à faire selon ton signe. ' +
+    `Crée ton compte avec mon lien, c’est gratuit et sans carte bancaire : ${url}`
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'Lunaris', text, url })
+      // Le lien est dans le texte et pas dans « url » : Messages, WhatsApp ou Instagram n'envoient sinon que le lien, sans la phrase.
+      await navigator.share({ text })
       return 'shared'
     } catch (err) {
       if (err?.name === 'AbortError') return null
     }
   }
   try {
-    await navigator.clipboard.writeText(`${text} ${url}`)
+    await navigator.clipboard.writeText(text)
     return 'copied'
   } catch {
     return null
