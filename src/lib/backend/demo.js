@@ -121,9 +121,9 @@ const SAMPLES = [
 
 // Phrase du jour du signe, seule partie gratuite sans abonnement (générée par le serveur dans la vraie app).
 const DEMO_PHRASES = [
-  'Dites non une fois aujourd’hui. Sans vous justifier.',
-  'Ce message que vous tapez puis effacez : envoyez-le.',
-  'Votre to-do list n’est pas une personnalité. Faites-en la moitié.',
+  'Vous avez déjà la réponse. Vous attendez juste qu’on vous la confirme.',
+  'Votre énergie va plus vite que votre journée, et c’est plutôt une qualité.',
+  'Vous retenez tout, même ce que les autres ont oublié. C’est une forme de tendresse.',
 ]
 
 export async function getDaily(date) {

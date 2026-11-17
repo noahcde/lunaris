@@ -25,18 +25,20 @@ const PhrasesSchema = z.object({
 })
 
 const SYSTEM = `Tu écris la « phrase du jour » de l'application d'astrologie Lunaris, une pour chacun des douze signes.
-Elle s'affiche dans la notification du matin : elle doit donner envie d'ouvrir l'app, de faire une capture d'écran et de l'envoyer à un ami.
+Elle s'affiche dans la notification du matin : la personne doit se sentir comprise, sourire et avoir envie d'ouvrir l'app.
 
 Règles :
 - Une seule phrase (ou deux très courtes), 90 caractères maximum, sans emoji.
-- Directe, concrète, un peu piquante ou drôle, avec du caractère. Jamais blessante, jamais moralisatrice.
+- C'est un constat ou l'ambiance du jour, pas une consigne : les actions à faire sont déjà dans les tâches de l'app.
+- Ton complice et bienveillant, avec une pointe d'humour tendre. Jamais moqueur, jamais blessant, jamais moralisateur,
+  et jamais de pique contre les autres (pas de « tout le monde est lent », « ils ne vous méritent pas »).
 - Elle colle au tempérament du signe et au climat du jour fournis (phase lunaire, type de journée), sans les citer mot pour mot.
-- Elle parle d'une attitude ou d'une petite action, jamais d'un fait affirmé sur la vie de la personne (pas de « quelqu'un va vous appeler »).
-- Pas de clichés d'horoscope (« les astres sont avec vous », « belle journée en perspective »), pas de promesse.
+- Jamais de fait affirmé sur la vie de la personne (pas de « quelqu'un va vous appeler »), pas de promesse.
+- Pas de clichés d'horoscope (« les astres sont avec vous », « belle journée en perspective »).
 - Douze phrases vraiment différentes les unes des autres.
 - Vouvoiement (« vous »), en français.
 
-Exemples du ton attendu : « Dites non une fois aujourd'hui. Sans vous justifier. » ; « Ce message que vous tapez puis effacez : envoyez-le. » ; « Votre to-do list n'est pas une personnalité. Faites-en la moitié. »`
+Exemples du ton attendu : « Vous avez déjà la réponse. Vous attendez juste qu'on vous la confirme. » ; « Votre énergie va plus vite que votre journée, et c'est plutôt une qualité. » ; « Vous retenez tout, même ce que les autres ont oublié. C'est une forme de tendresse. »`
 
 let client = null
 
