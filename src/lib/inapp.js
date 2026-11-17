@@ -19,3 +19,18 @@ export function chromeIntentLink() {
   const url = new URL(siteLink())
   return `intent://${url.host}${url.pathname}${url.search}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(url.href)};end`
 }
+
+// iPhone (iOS 17 et plus) : ce lien rouvre la page dans Safari depuis le navigateur d'une appli.
+export const safariLink = () => `x-safari-${siteLink()}`
+
+// Android : à l'ouverture dans le navigateur d'une appli, on bascule tout de suite dans Chrome (une seule fois,
+// pour ne pas boucler si Chrome n'est pas installé ou si l'appli refuse).
+export function autoOpenBrowser() {
+  try {
+    if (!inAppBrowser() || !isAndroid() || sessionStorage.getItem('lunaris.ouvert-chrome')) return
+    sessionStorage.setItem('lunaris.ouvert-chrome', '1')
+    window.location.href = chromeIntentLink()
+  } catch {
+    // Stockage indisponible : on reste ici, le bouton « Ouvrir dans Chrome » reste proposé.
+  }
+}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, Copy, ExternalLink, Flame, Loader2, Moon, Sparkles } from "lucide-react";
-import { chromeIntentLink, inAppBrowser, isAndroid, siteLink } from "../lib/inapp";
+import { chromeIntentLink, inAppBrowser, isAndroid, safariLink, siteLink } from "../lib/inapp";
 import GoogleIcon from "../components/GoogleIcon";
 import { cx } from "../lib/astro";
 import Logo from "../components/Logo";
@@ -46,9 +46,15 @@ function OpenInBrowser() {
         Google ne permet pas de se connecter depuis le navigateur de cette appli.
         {isAndroid()
           ? " Touchez le bouton ci-dessous pour continuer dans Chrome."
-          : " Touchez ••• ou l’icône de partage en haut de l’écran, puis «\u00a0Ouvrir dans Safari\u00a0»."}
+          : " Touchez le bouton ci-dessous. S’il ne fait rien, touchez ••• en haut de l’écran, puis «\u00a0Ouvrir dans Safari\u00a0»."}
       </p>
       <div className="mt-4 flex flex-col gap-2">
+        {!isAndroid() && (
+          <a href={safariLink()} className={cx(button, "bg-blue-600 text-white hover:bg-blue-500")}>
+            <ExternalLink className="h-4 w-4" />
+            Ouvrir dans Safari
+          </a>
+        )}
         {isAndroid() && (
           <a href={chromeIntentLink()} className={cx(button, "bg-blue-600 text-white hover:bg-blue-500")}>
             <ExternalLink className="h-4 w-4" />
