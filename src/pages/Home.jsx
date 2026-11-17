@@ -183,7 +183,11 @@ function CosmicInsight({ daily, sign, onRetry, trialAvailable, onUnlock }) {
           {daily.opening && (
             <>
               <h3 className="mt-1 text-[15px] font-semibold leading-snug text-white">{daily.opening.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-zinc-300">{daily.opening.text}</p>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-300">
+                {daily.opening.text}{' '}
+                {/* Suite fictive floutée : le vrai texte n'est envoyé qu'aux abonnés. */}
+                <span aria-hidden="true" className={LOCKED_TEXT}>et ce mouvement pourrait bien changer la façon dont vous abordez la fin de journée.</span>
+              </p>
             </>
           )}
           <div className="relative">

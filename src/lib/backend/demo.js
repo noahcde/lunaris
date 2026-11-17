@@ -132,7 +132,7 @@ const DEMO_GENERAL =
 
 const DEMO_OPENING = {
   title: 'Le bon moment pour trancher.',
-  text: 'Votre signe aborde la journée avec une clarté rare, et ce qui vous faisait hésiter au travail commence à prendre une forme nette.',
+  text: 'Votre signe aborde la journée avec une clarté rare. Ce qui vous faisait hésiter au travail commence à prendre',
 }
 
 export async function getDaily(date) {

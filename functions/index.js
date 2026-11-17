@@ -16,7 +16,7 @@ import { dayContext, sunSign } from './astro.js'
 let deps = null
 async function loadDeps() {
   if (!deps) {
-    const [{ initializeApp, getApps }, { getFirestore, FieldValue }, { generateDaily, generateOpening }, billing, referral, phrase] = await Promise.all([
+    const [{ initializeApp, getApps }, { getFirestore, FieldValue }, { generateDaily, generateOpening, teaserOf }, billing, referral, phrase] = await Promise.all([
       import('firebase-admin/app'),
       import('firebase-admin/firestore'),
       import('./daily.js'),
@@ -26,7 +26,7 @@ async function loadDeps() {
     ])
     // firebase-functions crée sa propre app nommée : on vérifie l'app par défaut, pas le nombre d'apps.
     if (!getApps().some((app) => app.name === '[DEFAULT]')) initializeApp()
-    deps = { db: getFirestore(), FieldValue, generateDaily, generateOpening, billing, referral, phrase }
+    deps = { db: getFirestore(), FieldValue, generateDaily, generateOpening, teaserOf, billing, referral, phrase }
   }
   return deps
 }
@@ -207,19 +207,22 @@ const personOf = (user) => ({
   quiz: user.quiz,
 })
 
-// Début gratuit de l'horoscope personnel { title, text }, généré une fois par jour et gardé dans openings/{uid_date}
+// Début gratuit de l'horoscope personnel { title, text } (texte coupé au milieu d'une phrase), généré une fois par jour et gardé dans openings/{uid_date}
 // (collection inaccessible depuis l'app). null en cas d'échec : l'app floute alors tout l'horoscope personnel.
 async function openingFor(db, FieldValue, uid, date) {
   const ref = db.doc(`openings/${uid}_${date}`)
   try {
+    const { generateOpening, teaserOf } = await loadDeps()
     const snap = await ref.get()
-    if (snap.exists) return { title: snap.data().title, text: snap.data().text }
-    const user = (await db.doc(`users/${uid}`).get()).data()
-    if (!user?.birthDate) return null
-    const { generateOpening } = await loadDeps()
-    const opening = await generateOpening({ model: OPENAI_MODEL.value(), ...personOf(user), ...dayContext(date) })
-    await ref.set({ ...opening, uid, date, generatedAt: FieldValue.serverTimestamp() })
-    return opening
+    let opening = snap.exists ? { title: snap.data().title, text: snap.data().text } : null
+    if (!opening) {
+      const user = (await db.doc(`users/${uid}`).get()).data()
+      if (!user?.birthDate) return null
+      opening = await generateOpening({ model: OPENAI_MODEL.value(), ...personOf(user), ...dayContext(date) })
+      await ref.set({ ...opening, uid, date, generatedAt: FieldValue.serverTimestamp() })
+    }
+    // Seul le début, coupé au milieu d'une phrase, part vers l'app.
+    return { title: opening.title, text: teaserOf(opening.text) }
   } catch (err) {
     logger.warn('Début d’horoscope indisponible', { uid, date, error: String(err) })
     return null
