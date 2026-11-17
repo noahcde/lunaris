@@ -20,6 +20,7 @@ import {
   otherKey,
 } from "../lib/quiz";
 import Logo from "../components/Logo";
+import { INTERLUDES, SIGN_INFO } from "../lib/interludes";
 
 const FOCUS_ICONS = {
   amour: Heart,
@@ -76,6 +77,62 @@ function Option({ option, selected, Icon, onSelect }) {
         {selected && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
       </span>
     </button>
+  );
+}
+
+// Écran entre deux questions : ce que Lunaris fera de la réponse (voir lib/interludes.js).
+function Interlude({ kicker, title, text, children, onContinue, cta = "Continuer" }) {
+  return (
+    <div className="mt-10 flex flex-1 animate-page-in flex-col lg:mt-20 lg:max-w-xl">
+      <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-400">
+        <Sparkles
+          className="h-4 w-4 text-purple-500 drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]"
+          strokeWidth={2}
+        />
+        {kicker}
+      </p>
+      {children}
+      <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight text-white lg:text-4xl">
+        {title}
+      </h1>
+      <p className="mt-4 text-[15px] leading-relaxed text-zinc-300 lg:text-base">
+        {text}
+      </p>
+      <div className="flex flex-1 items-center justify-center py-8 lg:hidden">
+        <ZodiacWheel className="w-52 max-w-full opacity-90" />
+      </div>
+      <button
+        type="button"
+        onClick={onContinue}
+        autoFocus
+        className={cx(primaryButton, "lg:mt-10")}
+      >
+        {cta}
+        <ArrowRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+function SignReveal({ sign, onContinue }) {
+  const info = SIGN_INFO[sign];
+  return (
+    <Interlude
+      kicker="Votre signe"
+      title={`Vous êtes ${sign}.`}
+      text={`${info.text} Chaque matin, Lunaris vous écrit une phrase et un horoscope pensés pour votre signe.`}
+      onContinue={onContinue}
+      cta="Lancer l’analyse"
+    >
+      <div className="mt-6 flex items-center gap-4">
+        <span className="flex h-20 w-20 items-center justify-center rounded-2xl border border-zinc-900 bg-zinc-950 text-5xl text-white shadow-[0_0_32px_-8px_rgba(168,85,247,0.7)]">
+          {info.glyph}{"\uFE0E"}
+        </span>
+        <span className="rounded-full border border-zinc-800 px-3 py-1 text-xs text-zinc-400">
+          Signe de {info.element}
+        </span>
+      </div>
+    </Interlude>
   );
 }
 
@@ -206,10 +263,13 @@ export default function Quiz({ initial, onBack, onComplete }) {
   const [answers, setAnswers] = useState(initial ?? {});
   // 0..N-1 questions, N date de naissance, N+1 analyse, N+2 résultat
   const [step, setStep] = useState(0);
+  // Écran intermédiaire affiché après la réponse : id de la question, ou "sign" après la date de naissance.
+  const [interlude, setInterlude] = useState(null);
   const total = QUESTIONS.length + 1;
   const ANALYSIS = QUESTIONS.length + 1;
 
-  const back = () => (step === 0 ? onBack() : setStep((s) => s - 1));
+  const back = () =>
+    interlude ? setInterlude(null) : step === 0 ? onBack() : setStep((s) => s - 1);
 
   if (step === ANALYSIS) return <Analysis onDone={() => setStep(ANALYSIS + 1)} />;
   if (step === ANALYSIS + 1)
@@ -219,7 +279,15 @@ export default function Quiz({ initial, onBack, onComplete }) {
   const choose = (value) => {
     setAnswers((a) => ({ ...a, [question.id]: value }));
     // « Autre » attend le texte libre : on ne passe pas tout de suite à la question suivante.
-    if (value !== OTHER) setTimeout(() => setStep((s) => s + 1), 250);
+    if (value !== OTHER) setTimeout(() => next(question.id), 250);
+  };
+  // Après une réponse : l'écran intermédiaire de la question s'il y en a un, sinon la question suivante.
+  const next = (questionId) =>
+    INTERLUDES[questionId] ? setInterlude(questionId) : setStep((s) => s + 1);
+  const closeInterlude = () => {
+    const wasSign = interlude === "sign";
+    setInterlude(null);
+    setStep((s) => (wasSign ? ANALYSIS : s + 1));
   };
   const otherText = question ? (answers[otherKey(question.id)] ?? "") : "";
   const otherSelected = question && answers[question.id] === OTHER;
@@ -255,7 +323,17 @@ export default function Quiz({ initial, onBack, onComplete }) {
         </span>
       </div>
 
-      {question ? (
+      {interlude === "sign" ? (
+        <SignReveal sign={sign} onContinue={closeInterlude} />
+      ) : interlude ? (
+        <Interlude
+          key={interlude}
+          kicker={INTERLUDES[interlude].kicker}
+          title={INTERLUDES[interlude].title}
+          text={INTERLUDES[interlude].texts[answers[interlude]] ?? INTERLUDES[interlude].texts.autre}
+          onContinue={closeInterlude}
+        />
+      ) : question ? (
         <div
           key={question.id}
           className="mt-10 animate-page-in lg:mt-20 lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-16"
@@ -290,7 +368,7 @@ export default function Quiz({ initial, onBack, onComplete }) {
                 className="mt-4 animate-page-in"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  if (otherText.trim()) setStep((s) => s + 1);
+                  if (otherText.trim()) next(question.id);
                 }}
               >
                 <label
@@ -334,7 +412,7 @@ export default function Quiz({ initial, onBack, onComplete }) {
           className="mt-10 flex flex-1 animate-page-in flex-col justify-between lg:mt-20 lg:flex-none lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-16"
           onSubmit={(e) => {
             e.preventDefault();
-            if (sign) setStep(ANALYSIS);
+            if (sign) setInterlude("sign");
           }}
         >
           <div className="lg:contents">
@@ -376,7 +454,7 @@ export default function Quiz({ initial, onBack, onComplete }) {
                 disabled={!sign}
                 className={cx(primaryButton, "mt-8 hidden lg:flex")}
               >
-                Lancer l’analyse
+                Continuer
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -386,7 +464,7 @@ export default function Quiz({ initial, onBack, onComplete }) {
             disabled={!sign}
             className={cx(primaryButton, "mt-8 lg:hidden")}
           >
-            Lancer l’analyse
+            Continuer
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>
