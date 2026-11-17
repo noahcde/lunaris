@@ -163,32 +163,45 @@ function CosmicInsight({ daily, sign, onRetry, trialAvailable, onUnlock }) {
         </>
       )}
 
-      {daily.status === 'locked' && daily.phrase && (
-        // Sans abonnement : la phrase du jour du signe reste gratuite, le reste est flouté.
+      {daily.status === 'locked' && (daily.phrase || daily.opening) && (
+        // Sans abonnement : phrase du jour et horoscope du signe gratuits, puis le début de l'horoscope personnel ;
+        // le reste est flouté.
         <>
-          <p className="mt-3 text-[11px] font-medium text-zinc-500">Votre phrase du jour</p>
-          <h2 className="mt-1 text-[17px] font-semibold leading-snug text-white">{daily.phrase.text}</h2>
-          {daily.phrase.general && (
+          {daily.phrase && (
+            <>
+              <p className="mt-3 text-[11px] font-medium text-zinc-500">Votre phrase du jour</p>
+              <h2 className="mt-1 text-[17px] font-semibold leading-snug text-white">{daily.phrase.text}</h2>
+            </>
+          )}
+          {daily.phrase?.general && (
             <>
               <p className="mt-5 text-[11px] font-medium text-zinc-500">Horoscope du jour · {daily.phrase.sign}</p>
               <p className="mt-1 text-sm leading-relaxed text-zinc-300">{daily.phrase.general}</p>
             </>
           )}
-          <p className="mt-5 text-[11px] font-medium text-zinc-500">Votre horoscope personnel</p>
+          <p className={cx('text-[11px] font-medium text-zinc-500', daily.phrase ? 'mt-5' : 'mt-3')}>Votre horoscope personnel</p>
+          {daily.opening && (
+            <>
+              <h3 className="mt-1 text-[15px] font-semibold leading-snug text-white">{daily.opening.title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-300">{daily.opening.text}</p>
+            </>
+          )}
           <div className="relative">
             <div aria-hidden="true" className={LOCKED_TEXT}>
               <p className="mt-1 text-sm leading-relaxed text-zinc-400">{LOCKED_INSIGHT.text}</p>
               <InsightSections sections={LOCKED_INSIGHT.sections} />
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
-              <p className="text-sm font-medium text-white">Votre horoscope personnel et vos 3 tâches vous attendent.</p>
+              <p className="text-sm font-medium text-white">
+                {daily.opening ? 'La suite de votre horoscope et vos 3 tâches vous attendent.' : 'Votre horoscope personnel et vos 3 tâches vous attendent.'}
+              </p>
               <UnlockButton trialAvailable={trialAvailable} onClick={onUnlock} />
             </div>
           </div>
         </>
       )}
 
-      {daily.status === 'locked' && !daily.phrase && (
+      {daily.status === 'locked' && !daily.phrase && !daily.opening && (
         <div className="relative">
           <div aria-hidden="true" className={LOCKED_TEXT}>
             <h2 className="mt-3 text-[17px] font-semibold leading-snug text-white">{LOCKED_INSIGHT.title}</h2>

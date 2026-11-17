@@ -16,7 +16,7 @@ import { dayContext, sunSign } from './astro.js'
 let deps = null
 async function loadDeps() {
   if (!deps) {
-    const [{ initializeApp, getApps }, { getFirestore, FieldValue }, { generateDaily }, billing, referral, phrase] = await Promise.all([
+    const [{ initializeApp, getApps }, { getFirestore, FieldValue }, { generateDaily, generateOpening }, billing, referral, phrase] = await Promise.all([
       import('firebase-admin/app'),
       import('firebase-admin/firestore'),
       import('./daily.js'),
@@ -26,7 +26,7 @@ async function loadDeps() {
     ])
     // firebase-functions crée sa propre app nommée : on vérifie l'app par défaut, pas le nombre d'apps.
     if (!getApps().some((app) => app.name === '[DEFAULT]')) initializeApp()
-    deps = { db: getFirestore(), FieldValue, generateDaily, billing, referral, phrase }
+    deps = { db: getFirestore(), FieldValue, generateDaily, generateOpening, billing, referral, phrase }
   }
   return deps
 }
@@ -160,13 +160,17 @@ export const getDaily = onCall(
     const { db, FieldValue, generateDaily } = await loadDeps()
 
     // Sans abonnement : un seul jour d'aperçu (message du jour + 1 tâche), le premier jour où la personne ouvre l'app.
-    // Ensuite, seule la phrase du jour de son signe est envoyée (gratuite pour toujours) ; le reste est flouté.
+    // Ensuite, gratuit pour toujours : la phrase du jour et l'horoscope général de son signe,
+    // plus le début de son horoscope personnel (titre + première phrase) ; le reste est flouté.
     const state = await accessState(request, uid)
     if (!state.active) {
       // previews/{uid} n'est accessible qu'au serveur : l'app ne peut pas remettre l'aperçu à zéro.
       const previewRef = db.doc(`previews/${uid}`)
       const previewDate = (await previewRef.get()).data()?.date
-      if (previewDate && previewDate !== date) return { date, locked: true, phrase: await freePhrase(db, uid, date) }
+      if (previewDate && previewDate !== date) {
+        const [phrase, opening] = await Promise.all([freePhrase(db, uid, date), openingFor(db, FieldValue, uid, date)])
+        return { date, locked: true, phrase, opening }
+      }
       const daily = await dailyFor({ db, FieldValue, generateDaily, uid, date })
       if (!previewDate) await previewRef.set({ date, at: FieldValue.serverTimestamp() })
       return {
@@ -195,6 +199,33 @@ async function freePhrase(db, uid, date) {
   }
 }
 
+// Personne / profil utilisés par l'IA.
+const personOf = (user) => ({
+  firstName: user.firstName,
+  sign: sunSign(user.birthDate),
+  birthTime: user.birthTimeUnknown ? null : user.birthTime,
+  quiz: user.quiz,
+})
+
+// Début gratuit de l'horoscope personnel { title, text }, généré une fois par jour et gardé dans openings/{uid_date}
+// (collection inaccessible depuis l'app). null en cas d'échec : l'app floute alors tout l'horoscope personnel.
+async function openingFor(db, FieldValue, uid, date) {
+  const ref = db.doc(`openings/${uid}_${date}`)
+  try {
+    const snap = await ref.get()
+    if (snap.exists) return { title: snap.data().title, text: snap.data().text }
+    const user = (await db.doc(`users/${uid}`).get()).data()
+    if (!user?.birthDate) return null
+    const { generateOpening } = await loadDeps()
+    const opening = await generateOpening({ model: OPENAI_MODEL.value(), ...personOf(user), ...dayContext(date) })
+    await ref.set({ ...opening, uid, date, generatedAt: FieldValue.serverTimestamp() })
+    return opening
+  } catch (err) {
+    logger.warn('Début d’horoscope indisponible', { uid, date, error: String(err) })
+    return null
+  }
+}
+
 // Horoscope et tâches du jour, générés une fois puis relus depuis users/{uid}/daily/{date}.
 async function dailyFor({ db, FieldValue, generateDaily, uid, date }) {
   const cacheRef = db.doc(`users/${uid}/daily/${date}`)
@@ -214,16 +245,18 @@ async function dailyFor({ db, FieldValue, generateDaily, uid, date }) {
   const previous = await db.getAll(...previousDays.map((d) => db.doc(`users/${uid}/daily/${d}`)))
   const recentTasks = previous.flatMap((d) => (d.exists ? (d.data().tasks ?? []).map((t) => t.title) : []))
 
+  // Début déjà montré gratuitement ce jour-là : l'horoscope complet le reprend, pour ne pas changer sous ses yeux.
+  const openingSnap = await db.doc(`openings/${uid}_${date}`).get()
+  const opening = openingSnap.exists ? { title: openingSnap.data().title, text: openingSnap.data().text } : null
+
   try {
     const daily = await generateDaily({
       uid,
       date,
       recentTasks,
+      opening,
       model: OPENAI_MODEL.value(),
-      firstName: user.firstName,
-      sign: sunSign(user.birthDate),
-      birthTime: user.birthTimeUnknown ? null : user.birthTime,
-      quiz: user.quiz,
+      ...personOf(user),
       ...dayContext(date),
     })
     await cacheRef.set({ ...daily, date, generatedAt: FieldValue.serverTimestamp() })

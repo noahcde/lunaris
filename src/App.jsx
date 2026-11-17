@@ -108,7 +108,7 @@ export default function App() {
     try {
       const result = await backend.getDaily(todayKey)
       if (result.preview) setDaily({ status: 'preview', ...result.preview })
-      else setDaily(result.locked ? { status: 'locked', phrase: result.phrase ?? null } : { status: 'ready', ...result })
+      else setDaily(result.locked ? { status: 'locked', phrase: result.phrase ?? null, opening: result.opening ?? null } : { status: 'ready', ...result })
     } catch {
       setDaily({ status: 'error' })
     }

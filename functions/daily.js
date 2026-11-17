@@ -89,10 +89,8 @@ export function domainsOfDay(uid, date) {
   return picked
 }
 
-export async function generateDaily({ uid, date, recentTasks = [], model, firstName, sign, birthTime, quiz, dateLabel, moonPhase, dayStatus }) {
-  client ??= new OpenAI() // lit OPENAI_API_KEY (secret Firebase)
-
-  const profile = [
+function profileLines({ firstName, sign, birthTime, quiz, dateLabel, moonPhase, dayStatus }) {
+  return [
     `Prénom : ${firstName}`,
     `Signe solaire : ${sign}`,
     birthTime ? `Heure de naissance : ${birthTime}` : 'Heure de naissance inconnue',
@@ -100,10 +98,45 @@ export async function generateDaily({ uid, date, recentTasks = [], model, firstN
     `Date du jour : ${dateLabel}`,
     `Phase lunaire : ${moonPhase}`,
     `Climat du jour dans le calendrier de manifestation : ${dayStatus}`,
+  ]
+}
+
+// Début de l'horoscope personnel (titre + première phrase), montré en clair aux personnes sans abonnement.
+// Petit appel à l'IA : le reste n'est écrit que si la personne s'abonne, dans la suite de ce début (voir opening).
+const OpeningSchema = z.object({
+  title: z.string().describe('Une phrase courte et percutante, 60 caractères maximum.'),
+  text: z.string().describe('La première phrase de la vue d’ensemble du jour, 140 caractères maximum.'),
+})
+
+export async function generateOpening({ model, ...person }) {
+  client ??= new OpenAI()
+  const response = await client.responses.parse({
+    model,
+    instructions: `${SYSTEM}
+
+Ici, écris seulement le titre et la première phrase de la vue d'ensemble de l'horoscope du jour de cette personne.
+Cette première phrase est la seule partie lisible sans abonnement : elle doit parler clairement de cette personne (signe, situation, climat du jour), donner envie de lire la suite, et rester une tendance, jamais un fait affirmé.`,
+    input: `Voici le profil et le contexte du jour :\n\n${profileLines(person).join('\n')}`,
+    text: { format: zodTextFormat(OpeningSchema, 'opening') },
+  })
+  const opening = response.output_parsed
+  if (!opening?.title || !opening?.text) throw new Error(`unparsed:${response.status}`)
+  return { title: opening.title.trim(), text: opening.text.trim() }
+}
+
+// opening : début déjà montré à la personne avant son abonnement ; l'horoscope complet le reprend tel quel.
+export async function generateDaily({ uid, date, recentTasks = [], model, opening, ...person }) {
+  client ??= new OpenAI() // lit OPENAI_API_KEY (secret Firebase)
+
+  const profile = [
+    ...profileLines(person),
     `Domaines imposés pour les trois tâches du jour : ${domainsOfDay(uid, date).join(' ; ')}`,
     recentTasks.length
       ? `Tâches des jours précédents, à ne pas répéter :\n${recentTasks.map((t) => `- ${t}`).join('\n')}`
       : 'Tâches des jours précédents : aucune',
+    ...(opening
+      ? [`Début déjà écrit, à reprendre mot pour mot : titre « ${opening.title} » ; la vue d'ensemble commence par « ${opening.text} » et se poursuit dans sa continuité.`]
+      : []),
   ].join('\n')
 
   const response = await client.responses.parse({
@@ -116,5 +149,9 @@ export async function generateDaily({ uid, date, recentTasks = [], model, firstN
   const daily = response.output_parsed
   if (!daily || daily.tasks.length < 3) throw new Error(`unparsed:${response.status}`)
   const insight = { ...daily.insight, sections: (daily.insight.sections ?? []).slice(0, 4) }
+  if (opening) {
+    insight.title = opening.title
+    if (!insight.text.startsWith(opening.text)) insight.text = `${opening.text} ${insight.text}`
+  }
   return { insight, tasks: daily.tasks.slice(0, 3) }
 }
