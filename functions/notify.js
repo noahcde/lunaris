@@ -4,6 +4,7 @@
 import { getFirestore, FieldPath, FieldValue } from 'firebase-admin/firestore'
 import { getMessaging } from 'firebase-admin/messaging'
 import { nextSendAt } from './schedule.js'
+import { sunSign } from './astro.js'
 
 const MAX_TOKENS = 10 // appareils gardés par personne (les plus récents)
 const DEAD_TOKEN_CODES = new Set([
@@ -81,7 +82,22 @@ async function sendToUser(userDoc, { appUrl, body }) {
   return { successCount, errors }
 }
 
-export async function sendMorningNotifications({ appUrl, logger }) {
+// Texte de la notification du matin : la phrase du jour du signe de la personne (functions/phrase.js),
+// ou le rappel habituel si son signe est inconnu ou si la phrase n'a pas pu être générée.
+async function morningBody(userData, date, phraseOf, logger) {
+  if (!phraseOf || !userData.birthDate) return undefined
+  try {
+    const sign = sunSign(userData.birthDate)
+    const phrase = await phraseOf(date, sign)
+    return phrase ? `${sign} · ${phrase}` : undefined
+  } catch (err) {
+    logger.warn('Phrase du jour indisponible', { date, error: String(err) })
+    return undefined
+  }
+}
+
+// phraseOf(date, signe) : phrase du jour d'un signe (peut échouer : le rappel habituel est alors envoyé).
+export async function sendMorningNotifications({ appUrl, logger, phraseOf }) {
   const now = new Date()
   // Seules les personnes dont l'heure d'envoi est arrivée sont lues (notifications.nextSendAt, calculé par l'app).
   const snap = await getFirestore().collection('users').where('notifications.nextSendAt', '<=', now).get()
@@ -95,7 +111,8 @@ export async function sendMorningNotifications({ appUrl, logger }) {
       continue
     }
     if (n.tokens?.length) {
-      const { successCount, errors } = await sendToUser(userDoc, { appUrl })
+      const body = await morningBody(userDoc.data(), localDate(n.timeZone, now), phraseOf, logger)
+      const { successCount, errors } = await sendToUser(userDoc, { appUrl, body })
       sent += successCount
       if (errors.length) logger.warn('Notification du matin non délivrée', { uid: userDoc.id, errors })
     }
@@ -110,4 +127,13 @@ export async function sendTestNotification({ uid, appUrl, logger }) {
   const result = await sendToUser(userDoc, { appUrl, body: 'Notification de test : tout fonctionne ✨' })
   logger.info('Notification de test', { uid, ...result })
   return result
+}
+
+// Parrainage : prévient le parrain qu'un ami l'a rejoint (sans effet s'il n'a pas activé les notifications).
+export async function sendReferralNotification({ uid, friendName, appUrl, logger }) {
+  const userDoc = await getFirestore().doc(`users/${uid}`).get()
+  if (!userDoc.exists || !userDoc.data().notifications?.tokens?.length) return
+  const who = friendName || 'Un ami'
+  const result = await sendToUser(userDoc, { appUrl, body: `${who} a rejoint Lunaris grâce à vous : 7 jours offerts 🎁` })
+  logger.info('Notification de parrainage', { uid, ...result })
 }

@@ -119,6 +119,22 @@ const SAMPLES = [
   },
 ]
 
+// Phrase du jour du signe, seule partie gratuite sans abonnement (générée par le serveur dans la vraie app).
+const DEMO_PHRASES = [
+  'Vous avez déjà la réponse. Vous attendez juste qu’on vous la confirme.',
+  'Votre énergie va plus vite que votre journée, et c’est plutôt une qualité.',
+  'Vous retenez tout, même ce que les autres ont oublié. C’est une forme de tendresse.',
+]
+
+const DEMO_GENERAL =
+  'Une journée plus douce qu’elle n’en a l’air. Ce qui coinçait hier se dénoue sans forcer, surtout si vous laissez un peu de place à l’imprévu. ' +
+  'Côté cœur, les mots simples passent mieux que les grandes déclarations. Gardez un moment pour vous ce soir : vous l’aurez mérité.'
+
+const DEMO_OPENING = {
+  title: 'Le bon moment pour trancher.',
+  text: 'Votre signe aborde la journée avec une clarté rare. Ce qui vous faisait hésiter au travail commence à prendre',
+}
+
 export async function getDaily(date) {
   await new Promise((r) => setTimeout(r, 900))
   const sign = sunSign(memory.data?.birthDate) ?? 'votre signe'
@@ -131,7 +147,7 @@ export async function getDaily(date) {
   if (billingState().active) return daily
   // Comme le serveur : un seul jour d'aperçu sans abonnement (message du jour + 1 tâche).
   const previewDate = read(PREVIEW_KEY)
-  if (previewDate && previewDate !== date) return { date, locked: true }
+  if (previewDate && previewDate !== date) return { date, locked: true, phrase: { sign, text: DEMO_PHRASES[Number(date.slice(-2)) % DEMO_PHRASES.length], general: DEMO_GENERAL }, opening: DEMO_OPENING }
   write(PREVIEW_KEY, date)
   return {
     date,
@@ -151,7 +167,12 @@ const NO_SUBSCRIPTION = {
   trialUsed: false,
   hasCustomer: false,
 }
-const billingState = () => memory.data?.billing ?? NO_SUBSCRIPTION
+const billingState = () => {
+  const billing = memory.data?.billing ?? NO_SUBSCRIPTION
+  const until = memory.data?.giftUntil ?? 0
+  if (billing.active || until <= Date.now()) return billing
+  return { ...billing, active: true, status: 'gift', periodEnd: Math.floor(until / 1000) }
+}
 
 export async function getBilling() {
   await new Promise((r) => setTimeout(r, 300))
@@ -209,3 +230,16 @@ export async function updateNotifications(_uid, partial) {
 }
 
 export const mode = 'demo'
+
+// Parrainage simulé : le lien est fixe, et utiliser un lien offre 7 jours tout de suite.
+export async function getReferral() {
+  await new Promise((r) => setTimeout(r, 300))
+  return { code: 'DEMO42', invited: memory.data?.demoInvited ?? 0 }
+}
+
+export async function claimReferral() {
+  await new Promise((r) => setTimeout(r, 400))
+  if (memory.data?.billing?.trialUsed) return { ok: false, reason: 'deja-abonne' }
+  await saveUserData(null, { giftUntil: Date.now() + 7 * 86400000 })
+  return { ok: true, days: 7 }
+}

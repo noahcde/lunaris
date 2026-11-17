@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import {
-  Sparkles, Check, Moon, Zap, ChevronRight, Heart, Briefcase, Wallet, Activity, Users, House, Palette, GraduationCap, Compass,
+  Sparkles, Check, Moon, Zap, ChevronRight, Heart, Briefcase, Wallet, Activity, Users, House, Palette, GraduationCap, Compass, Gift,
 } from 'lucide-react'
 import DayDetail from '../components/DayDetail'
 import StreakCard from '../components/StreakCard'
@@ -163,7 +163,49 @@ function CosmicInsight({ daily, sign, onRetry, trialAvailable, onUnlock }) {
         </>
       )}
 
-      {daily.status === 'locked' && (
+      {daily.status === 'locked' && (daily.phrase || daily.opening) && (
+        // Sans abonnement : phrase du jour et horoscope du signe gratuits, puis le début de l'horoscope personnel ;
+        // le reste est flouté.
+        <>
+          {daily.phrase && (
+            <>
+              <p className="mt-3 text-[11px] font-medium text-zinc-500">Votre phrase du jour</p>
+              <h2 className="mt-1 text-[17px] font-semibold leading-snug text-white">{daily.phrase.text}</h2>
+            </>
+          )}
+          {daily.phrase?.general && (
+            <>
+              <p className="mt-5 text-[11px] font-medium text-zinc-500">Horoscope du jour · {daily.phrase.sign}</p>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-300">{daily.phrase.general}</p>
+            </>
+          )}
+          <p className={cx('text-[11px] font-medium text-zinc-500', daily.phrase ? 'mt-5' : 'mt-3')}>Votre horoscope personnel</p>
+          {daily.opening && (
+            <>
+              <h3 className="mt-1 text-[15px] font-semibold leading-snug text-white">{daily.opening.title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-300">
+                {daily.opening.text}{' '}
+                {/* Suite fictive floutée : le vrai texte n'est envoyé qu'aux abonnés. */}
+                <span aria-hidden="true" className={LOCKED_TEXT}>et ce mouvement pourrait bien changer la façon dont vous abordez la fin de journée.</span>
+              </p>
+            </>
+          )}
+          <div className="relative">
+            <div aria-hidden="true" className={LOCKED_TEXT}>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-400">{LOCKED_INSIGHT.text}</p>
+              <InsightSections sections={LOCKED_INSIGHT.sections} />
+            </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
+              <p className="text-sm font-medium text-white">
+                {daily.opening ? 'La suite de votre horoscope et vos 3 tâches vous attendent.' : 'Votre horoscope personnel et vos 3 tâches vous attendent.'}
+              </p>
+              <UnlockButton trialAvailable={trialAvailable} onClick={onUnlock} />
+            </div>
+          </div>
+        </>
+      )}
+
+      {daily.status === 'locked' && !daily.phrase && !daily.opening && (
         <div className="relative">
           <div aria-hidden="true" className={LOCKED_TEXT}>
             <h2 className="mt-3 text-[17px] font-semibold leading-snug text-white">{LOCKED_INSIGHT.title}</h2>
@@ -416,10 +458,45 @@ function ManifestationStrip({ today, selectedDate, onSelectDate, onOpenCalendar,
 }
 
 /* ------------------------------------------------------------------ */
+/* Parrainage                                                          */
+/* ------------------------------------------------------------------ */
+
+export function InviteCard({ referral, onInvite, className }) {
+  return (
+    <section className={cx('rounded-2xl border border-zinc-900 bg-zinc-950 p-5', className)}>
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-purple-500/30 bg-purple-500/[0.08]">
+          <Gift className="h-4 w-4 text-purple-400" strokeWidth={2} />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-[15px] font-semibold text-white">Invitez un ami, 7 jours offerts chacun</h2>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+            Envoyez votre lien : quand votre ami s’inscrit, vous recevez tous les deux 7 jours de Premium.
+          </p>
+          {referral?.invited > 0 && (
+            <p className="mt-1 text-xs text-zinc-500">
+              {referral.invited} {referral.invited > 1 ? 'amis inscrits' : 'ami inscrit'} grâce à vous
+            </p>
+          )}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onInvite}
+        disabled={!referral}
+        className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_0_20px_-6px_rgba(37,99,235,0.8)] transition-all duration-300 ease-in-out hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:opacity-60"
+      >
+        Envoyer mon lien d’invitation
+      </button>
+    </section>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 
-export default function Home({ today, user, profile, onOpenProfile, daily, onRetryDaily, tasks, onToggleTask, streak, selectedDate, onSelectDate, onOpenCalendar, locked, trialAvailable, onUnlock }) {
+export default function Home({ today, user, profile, onOpenProfile, daily, onRetryDaily, tasks, onToggleTask, streak, selectedDate, onSelectDate, onOpenCalendar, locked, trialAvailable, onUnlock, referral, onInvite }) {
   return (
     <>
       <Header today={today} energy={72} user={user} profile={profile} onOpenProfile={onOpenProfile} />
@@ -440,6 +517,7 @@ export default function Home({ today, user, profile, onOpenProfile, daily, onRet
             locked={locked}
             preview={daily.status === 'preview'}
           />
+          {onInvite && <InviteCard referral={referral} onInvite={onInvite} />}
         </div>
         <div className="flex flex-col gap-7">
           <StreakCard

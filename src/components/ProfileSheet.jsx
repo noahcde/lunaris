@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { CreditCard, Download, LogOut, Pencil, RotateCcw, Sparkles, X } from 'lucide-react'
+import { CreditCard, Download, Gift, LogOut, Pencil, RotateCcw, Sparkles, X } from 'lucide-react'
 import { cx, sunSign } from '../lib/astro'
 import { LegalLinks } from '../pages/LegalPage'
 import { answerLabel } from '../lib/quiz'
@@ -19,6 +19,7 @@ const billingLabel = (billing) => {
   if (!billing) return '…'
   if (!billing.active) return 'Aucun'
   if (billing.status === 'free') return 'Accès offert'
+  if (billing.status === 'gift') return `Offert jusqu’au ${shortDate(billing.periodEnd)}`
   if (billing.status === 'trialing' && billing.trialEnd) return `Essai offert jusqu’au ${shortDate(billing.trialEnd)}`
   const plan = PLAN_LABELS[billing.plan] ?? 'Premium'
   if (!billing.periodEnd) return plan
@@ -42,7 +43,7 @@ const actionClass = cx(
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600',
 )
 
-export default function ProfileSheet({ open, user, profile, streak, billing, demo, onClose, onEdit, onSubscribe, onManageBilling, onSignOut, onResetDemo, notificationSettings, onInstall }) {
+export default function ProfileSheet({ open, user, profile, streak, billing, demo, onClose, onEdit, onSubscribe, onManageBilling, onSignOut, onResetDemo, notificationSettings, onInstall, onInvite }) {
   useEffect(() => {
     if (!open) return
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -104,7 +105,7 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
         {notificationSettings && <div className="mt-5">{notificationSettings}</div>}
 
         <div className="mt-5 flex flex-col gap-2">
-          {billing?.status === 'free' ? null : billing?.active ? (
+          {billing?.status === 'free' ? null : billing?.active && billing.status !== 'gift' ? (
             <button type="button" onClick={onManageBilling} className={cx(actionClass, 'text-white')}>
               <CreditCard className="h-4 w-4 text-blue-600" />
               {demo ? 'Résilier l’abonnement (démo)' : 'Gérer ou résilier mon abonnement'}
@@ -113,6 +114,12 @@ export default function ProfileSheet({ open, user, profile, streak, billing, dem
             <button type="button" onClick={onSubscribe} className={cx(actionClass, 'text-white')}>
               <Sparkles className="h-4 w-4 text-blue-600" />
               {billing?.trialUsed ? 'S’abonner à Lunaris Premium' : 'Essayer Premium · 2 jours offerts'}
+            </button>
+          )}
+          {onInvite && (
+            <button type="button" onClick={onInvite} className={cx(actionClass, 'text-white')}>
+              <Gift className="h-4 w-4 text-blue-600" />
+              Inviter un ami · 7 jours offerts chacun
             </button>
           )}
           {onInstall && (

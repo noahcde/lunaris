@@ -20,6 +20,10 @@ import { isStandalone } from './lib/pwa'
 import { nextSendAt } from './lib/schedule'
 import LegalPage from './pages/LegalPage'
 import { DOC_IDS } from './content/legal'
+import { captureReferral, clearReferral, pendingReferral, shareInvite } from './lib/referral'
+
+// Lien d'invitation (?parrain=CODE) : gardé dès l'ouverture, utilisé après l'inscription.
+captureReferral()
 
 const PAGES = ['accueil', 'calendrier']
 
@@ -104,7 +108,7 @@ export default function App() {
     try {
       const result = await backend.getDaily(todayKey)
       if (result.preview) setDaily({ status: 'preview', ...result.preview })
-      else setDaily(result.locked ? { status: 'locked' } : { status: 'ready', ...result })
+      else setDaily(result.locked ? { status: 'locked', phrase: result.phrase ?? null, opening: result.opening ?? null } : { status: 'ready', ...result })
     } catch {
       setDaily({ status: 'error' })
     }
@@ -146,6 +150,45 @@ export default function App() {
       paymentReturn.current = false
     })
   }, [profileReady, user?.uid, refreshAccess])
+
+  // Parrainage : lien d'invitation de la personne, et lien reçu d'un ami (utilisé une fois le profil créé).
+  const [referral, setReferral] = useState(null)
+  const [gift, setGift] = useState(null) // jours offerts par le lien d'un ami, à annoncer
+  const [toast, setToast] = useState(null)
+  useEffect(() => {
+    if (!profileReady || !backend?.getReferral) return
+    let cancelled = false
+    backend
+      .getReferral()
+      .then((r) => !cancelled && setReferral(r))
+      .catch(() => {})
+    const code = pendingReferral()
+    if (code) {
+      backend
+        .claimReferral(code)
+        .then((res) => {
+          clearReferral()
+          if (cancelled || !res?.ok) return
+          setGift(res.days)
+          refreshAccess(true)
+        })
+        .catch(() => {
+          // Réseau : le lien reste gardé, nouvel essai à la prochaine ouverture.
+        })
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [profileReady, user?.uid, backend, refreshAccess])
+
+  const invite = async () => {
+    if (!referral?.code) return
+    const result = await shareInvite(referral.code)
+    if (result === 'copied') {
+      setToast('Lien copié : collez-le dans un message à votre ami.')
+      setTimeout(() => setToast(null), 3500)
+    }
+  }
 
   // Notifications activées : à chaque ouverture, on met à jour le service worker et le jeton de l'appareil.
   const notificationsOn = Boolean(data?.notifications?.enabled)
@@ -361,6 +404,7 @@ export default function App() {
           window.scrollTo({ top: 0 })
         }}
         onSignIn={() => setEntry('login')}
+        invited={Boolean(pendingReferral())}
       />,
       true,
     )
@@ -413,6 +457,16 @@ export default function App() {
             onReactivate={() => enableNotifications(data.notifications?.hour ?? 8, data.notifications?.minute ?? 0)}
           />
         )}
+        {page === 'accueil' && gift && (
+          <div role="status" className="mt-6 flex items-start justify-between gap-3 rounded-2xl border border-purple-500/30 bg-purple-500/[0.08] p-4">
+            <p className="text-sm leading-relaxed text-white">
+              🎁 Votre ami vous offre {gift} jours de Premium{'\u00a0'}: horoscope complet, tâches et calendrier sont débloqués.
+            </p>
+            <button type="button" onClick={() => setGift(null)} className="shrink-0 text-xs font-medium text-zinc-400 hover:text-white">
+              OK
+            </button>
+          </div>
+        )}
         {page === 'accueil' ? (
           <Home
             today={today}
@@ -430,6 +484,8 @@ export default function App() {
             locked={locked}
             trialAvailable={trialAvailable}
             onUnlock={openPaywall}
+            referral={referral}
+            onInvite={backend.getReferral ? invite : null}
           />
         ) : (
           <CalendarPage today={today} selectedDate={selectedDate} onSelectDate={setSelectedDate} locked={locked} />
@@ -450,6 +506,14 @@ export default function App() {
         }}
         onSubscribe={openPaywall}
         onManageBilling={manageBilling}
+        onInvite={
+          referral
+            ? () => {
+                setSheetOpen(false)
+                invite()
+              }
+            : null
+        }
         notificationSettings={installOpen ? null : notificationSettings}
         onInstall={
           isStandalone()
@@ -469,6 +533,11 @@ export default function App() {
       <InstallGuide open={installOpen} onClose={() => setInstallOpen(false)}>
         {installOpen ? notificationSettings : null}
       </InstallGuide>
+      {toast && (
+        <div role="status" className="fixed inset-x-0 bottom-24 z-50 mx-auto w-fit max-w-[90vw] rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-white shadow-lg">
+          {toast}
+        </div>
+      )}
       <Paywall
         open={paywallOpen}
         trialAvailable={trialAvailable}
