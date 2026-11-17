@@ -119,6 +119,13 @@ const SAMPLES = [
   },
 ]
 
+// Phrase du jour du signe, seule partie gratuite sans abonnement (générée par le serveur dans la vraie app).
+const DEMO_PHRASES = [
+  'Dites non une fois aujourd’hui. Sans vous justifier.',
+  'Ce message que vous tapez puis effacez : envoyez-le.',
+  'Votre to-do list n’est pas une personnalité. Faites-en la moitié.',
+]
+
 export async function getDaily(date) {
   await new Promise((r) => setTimeout(r, 900))
   const sign = sunSign(memory.data?.birthDate) ?? 'votre signe'
@@ -131,7 +138,7 @@ export async function getDaily(date) {
   if (billingState().active) return daily
   // Comme le serveur : un seul jour d'aperçu sans abonnement (message du jour + 1 tâche).
   const previewDate = read(PREVIEW_KEY)
-  if (previewDate && previewDate !== date) return { date, locked: true }
+  if (previewDate && previewDate !== date) return { date, locked: true, phrase: { sign, text: DEMO_PHRASES[Number(date.slice(-2)) % DEMO_PHRASES.length] } }
   write(PREVIEW_KEY, date)
   return {
     date,
@@ -151,7 +158,12 @@ const NO_SUBSCRIPTION = {
   trialUsed: false,
   hasCustomer: false,
 }
-const billingState = () => memory.data?.billing ?? NO_SUBSCRIPTION
+const billingState = () => {
+  const billing = memory.data?.billing ?? NO_SUBSCRIPTION
+  const until = memory.data?.giftUntil ?? 0
+  if (billing.active || until <= Date.now()) return billing
+  return { ...billing, active: true, status: 'gift', periodEnd: Math.floor(until / 1000) }
+}
 
 export async function getBilling() {
   await new Promise((r) => setTimeout(r, 300))
@@ -209,3 +221,16 @@ export async function updateNotifications(_uid, partial) {
 }
 
 export const mode = 'demo'
+
+// Parrainage simulé : le lien est fixe, et utiliser un lien offre 7 jours tout de suite.
+export async function getReferral() {
+  await new Promise((r) => setTimeout(r, 300))
+  return { code: 'DEMO42', invited: memory.data?.demoInvited ?? 0 }
+}
+
+export async function claimReferral() {
+  await new Promise((r) => setTimeout(r, 400))
+  if (memory.data?.billing?.trialUsed) return { ok: false, reason: 'deja-abonne' }
+  await saveUserData(null, { giftUntil: Date.now() + 7 * 86400000 })
+  return { ok: true, days: 7 }
+}

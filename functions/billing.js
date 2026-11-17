@@ -142,3 +142,18 @@ export async function createPortal({ uid, origin }) {
   const session = await getStripe().billingPortal.sessions.create({ customer, return_url: `${origin}/?abonnement=maj#accueil` })
   return { url: session.url }
 }
+
+// Parrainage : un abonné parrain reçoit ses jours offerts en repoussant son prochain prélèvement.
+// Stripe ne facture rien jusqu'à la nouvelle date (essai prolongé) ; renvoie false sans abonnement en cours.
+export async function extendSubscription(uid, days) {
+  const customer = (await billingRef(uid).get()).get('customerId')
+  if (!customer) return false
+  const subs = await getStripe().subscriptions.list({ customer, status: 'all', limit: 20 })
+  const current = subs.data.find((s) => ACTIVE_STATUSES.has(s.status))
+  if (!current) return false
+  const from = current.status === 'trialing' ? current.trial_end : current.items.data[0]?.current_period_end
+  if (!from) return false
+  await getStripe().subscriptions.update(current.id, { trial_end: from + days * 86400, proration_behavior: 'none' })
+  await getBillingState(uid, { refresh: true })
+  return true
+}

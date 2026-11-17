@@ -38,6 +38,8 @@ const getBillingFn = httpsCallable(functions, 'getBilling')
 const startCheckoutFn = httpsCallable(functions, 'startCheckout')
 const openBillingPortalFn = httpsCallable(functions, 'openBillingPortal')
 const sendTestNotificationFn = httpsCallable(functions, 'sendTestNotification')
+const getReferralFn = httpsCallable(functions, 'getReferral')
+const claimReferralFn = httpsCallable(functions, 'claimReferral')
 
 // Prénom et nom fournis par Google lors de la connexion, gardés pour pré-remplir le profil.
 let googleNames = null
@@ -92,7 +94,7 @@ export async function saveUserData(uid, partial) {
 }
 
 // Horoscope et 3 tâches du jour, générés par l'IA côté serveur (functions/index.js).
-// Sans abonnement, le serveur renvoie { locked: true } sans aucun contenu.
+// Sans abonnement, le serveur renvoie { locked: true, phrase: { sign, text } } : seule la phrase du jour du signe.
 export async function getDaily(date) {
   const { data } = await getDailyFn({ date })
   return data
@@ -243,6 +245,18 @@ export async function sendTestNotification() {
 
 export async function updateNotifications(uid, partial) {
   await setDoc(doc(db, 'users', uid), { notifications: partial, updatedAt: serverTimestamp() }, { merge: true })
+}
+
+// Parrainage (functions/referral.js) : { code, invited } de la personne.
+export async function getReferral() {
+  const { data } = await getReferralFn({})
+  return data
+}
+
+// Lien d'invitation utilisé par un nouveau compte : { ok, days } ou { ok: false, reason }.
+export async function claimReferral(code) {
+  const { data } = await claimReferralFn({ code })
+  return data
 }
 
 export const mode = 'firebase'

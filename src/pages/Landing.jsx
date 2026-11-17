@@ -150,9 +150,14 @@ function DesktopStart({ onStart, className }) {
   )
 }
 
-export default function Landing({ onStart, onSignIn, demo }) {
+export default function Landing({ onStart, onSignIn, demo, invited }) {
   return (
     <div className="pb-36 lg:pb-24">
+      {invited && (
+        <p className="mt-4 rounded-xl border border-purple-500/30 bg-purple-500/[0.08] px-4 py-3 text-center text-sm text-white">
+          🎁 Un ami vous offre <strong>7 jours de Lunaris Premium</strong>, sans carte bancaire.
+        </p>
+      )}
       <header className="flex items-center justify-between pt-6 lg:pt-8">
         <Logo />
         <button
